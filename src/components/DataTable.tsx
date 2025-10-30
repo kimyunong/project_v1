@@ -44,7 +44,7 @@ function RawDataTable<T>({
     const rows = data ?? [];
 
     return (
-        <TableContainer component={Paper} variant={variant}>
+        <TableContainer component={Paper} variant={variant} sx={{ p:2}}>
             <Table size={size} aria-label="data table">
                 <TableHead>
                     <TableRow>
@@ -52,7 +52,7 @@ function RawDataTable<T>({
                             <TableCell
                                 key={c.id}
                                 align={c.align ?? 'left'}
-                                sx={{width: c.width}}
+                                sx={{width: c.width,p:1}}
                             >
                                 {c.header}
                             </TableCell>

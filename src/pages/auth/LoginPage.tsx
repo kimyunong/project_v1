@@ -28,7 +28,7 @@ export default function LoginPage() {
             <Paper sx={{p: 4, width: '380',}}>
                 <Stack spacing={2}>
                     <Typography variant="h5" fontWeight={700} sx={{color: '#00d4ff'}}>
-                        🧊 쇄빙연구선 통합 관리 시스템
+                        🧊 데이터 관리 시스템
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         아무 ID/PW 입력 후 로그인하세요.

@@ -18,7 +18,7 @@ const theme = createTheme({
             secondary: 'rgba(255,255,255,0.64)',
         },
     },
-    shape: {borderRadius: 12},
+    shape: {borderRadius: 8},
     components: {
         MuiCssBaseline: {
             styleOverrides: {

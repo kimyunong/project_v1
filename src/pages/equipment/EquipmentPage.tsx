@@ -128,7 +128,7 @@ export default function EquipmentPage() {
     return (
         <Stack spacing={2}>
             <Paper sx={{p: 2}}>
-                <Typography variant="h6" sx={{mb: 1}}>최근 장비</Typography>
+                <Typography variant="h6" sx={{mb: 1, color: '#00d4ff'}}>최근 장비</Typography>
                 <DataTable
                     columns={[
                         {id: 'id', header: '번호', width: 60},
@@ -144,7 +144,7 @@ export default function EquipmentPage() {
 
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6">장비 관리</Typography>
+                <Typography variant="h6" sx={{flexGrow: 1, color: '#00d4ff'}}>장비 관리</Typography>
                 <Stack direction="row" spacing={1}>
                     <Button variant="outlined" disabled>엑셀 다운로드</Button>
                     <Button variant="contained" onClick={() => setOpen(true)}>+ 장비 등록</Button>
