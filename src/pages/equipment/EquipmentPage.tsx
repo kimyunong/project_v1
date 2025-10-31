@@ -130,7 +130,7 @@ export default function EquipmentPage() {
             <Paper sx={{p: 2}}>
                 <Typography variant="h6" sx={{mb: 1, color: '#00d4ff'}}>최근 장비</Typography>
 
-                <Divider sx={{mt:2,mb:3}}/>
+                <Divider sx={{mt: 2, mb: 3}}/>
 
                 <DataTable
                     columns={[
@@ -145,7 +145,7 @@ export default function EquipmentPage() {
                 />
             </Paper>
 
-            <Divider sx={{mt:2,mb:3, border:'none'}}/>
+            <Divider sx={{mt: 2, mb: 3, border: 'none'}}/>
 
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -196,7 +196,8 @@ export default function EquipmentPage() {
 
                             <Typography variant="body2" color="text.secondary">사용률: {eq.usage}%</Typography>
                             <Typography variant="body2" color="text.secondary">잔여시간: {eq.remaining}</Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>최종점검: {eq.lastCheck}</Typography>
+                            <Typography variant="body2" color="text.secondary"
+                                        sx={{mb: 1}}>최종점검: {eq.lastCheck}</Typography>
 
                             {/* 상태 변경 Select */}
                             <Box display='flex' justifyContent='end'>
@@ -236,8 +237,8 @@ export default function EquipmentPage() {
                 fullWidth
                 maxWidth="sm"  // 중앙 너비 (sm=600px)
             >
-                <DialogTitle>+ 장비 등록</DialogTitle>
-
+                <DialogTitle sx={{pt: 3}}>+ 장비 등록</DialogTitle>
+                <Box></Box>
                 <DialogContent sx={{pt: 2}}>
                     <Stack spacing={3}>
                         <TextField

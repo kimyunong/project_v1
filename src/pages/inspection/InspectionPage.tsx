@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
     Paper, Stack, Typography, Button, TextField, MenuItem, Pagination,
-    Dialog, DialogTitle, DialogContent, DialogActions
+    Dialog, DialogTitle, DialogContent, DialogActions, Box
 } from '@mui/material';
 import DataTable from '@/components/DataTable';
 import {
@@ -158,7 +158,8 @@ export default function InspectionPage() {
 
             {/* 등록 다이얼로그 */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>+ 점검 일지 등록</DialogTitle>
+                <DialogTitle sx={{pt:3}}>+ 점검 일지 등록</DialogTitle>
+                <Box></Box>
                 <DialogContent sx={{ pt: 2 }}>
                     <Stack spacing={2}>
                         <TextField label="장비명" value={form.equipment} onChange={(e)=>setForm(f=>({...f, equipment: e.target.value}))} size="small" />

@@ -194,7 +194,8 @@ export default function PartsPage() {
 
             {/* 등록 다이얼로그 */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>+ 부속품 등록</DialogTitle>
+                <DialogTitle sx={{pt:3}}>+ 부속품 등록</DialogTitle>
+                <Box></Box>
                 <DialogContent sx={{pt: 2}}>
                     <Stack spacing={3}>
                         <TextField
