@@ -1,13 +1,16 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {Paper, Stack, Typography, Button, Box} from '@mui/material';
+import {Paper, Stack, Typography, Button, Box, Divider} from '@mui/material';
 import Grid from '@mui/material/Grid';
 import BoardsPage from "@/pages/boards/BoardsPage";
 import EquipmentPage from "@/pages/equipment/EquipmentPage";
 import DataTable from '@/components/DataTable';
 import {listPartsPaged, type Part} from '@/services/parts.service';
+import * as React from "react";
+import PartsPage from "@/pages/parts/PartsPage";
 
 export default function DashboardPage() {
+
     const stats = [
         {
             label: '전체 장비',
@@ -70,7 +73,7 @@ export default function DashboardPage() {
             <Grid container spacing={2}>
                 {stats.map((s, i) => (
                     <Grid size={{xs: 12, sm: 6, md: 3}} key={i}>
-                        <Paper  sx={{
+                        <Paper sx={{
                             p: 3,
                             width: 1,
                             display: 'flex',
@@ -99,19 +102,22 @@ export default function DashboardPage() {
             </Grid>
 
             <BoardsPage/>
+            <EquipmentPage/>
 
             <Paper sx={{p: 2}}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 1,p:1}}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 1, p: 1}}>
                     <Typography variant="h6" sx={{color: '#00d4ff'}}>최근 부속품</Typography>
                     <Button
                         variant="outlined"
                         size="small"
                         onClick={() => navigate('/parts')}
-                        sx={{p:1,pl:2,pr:2}}
+                        sx={{p: 1, pl: 2, pr: 2}}
                     >
                         전체 보기 →
                     </Button>
                 </Stack>
+
+                <Divider sx={{mt: 2, mb: 3}}/>
 
                 <DataTable<Part>
                     columns={[
@@ -128,8 +134,7 @@ export default function DashboardPage() {
                     data={recentParts}
                 />
             </Paper>
-
-            <EquipmentPage/>
+            <PartsPage/>
         </Stack>
     )
 }

@@ -4,7 +4,7 @@ import {createNotice, listNotices, type Notice, type ListNoticesInput} from '@/s
 import DataTable from '@/components/DataTable';
 
 import {
-    Paper, Typography, Button, Dialog, DialogTitle, DialogContent,
+    Paper, Typography, Button, Dialog, DialogTitle, DialogContent, Divider,
     DialogActions, TextField, MenuItem, Stack, Chip, Pagination, Box
 } from '@mui/material'
 
@@ -84,7 +84,7 @@ export default function BoardsPage() {
 
     return (
         <Paper sx={{p: 2}}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 2,p:1}}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 2, p: 1}}>
                 <Typography variant="h6" sx={{flexGrow: 1, color: '#00d4ff'}}>공지사항</Typography>
                 <Button variant="contained" onClick={() => setOpen(true)}>+ 새 공지사항</Button>
             </Stack>
@@ -107,6 +107,8 @@ export default function BoardsPage() {
                 </Stack>
             </Box>
 
+            <Divider sx={{mt: 2, mb: 3}}/>
+
             <DataTable<Notice>
                 data={data}
                 getRowKey={(n) => n.id}
@@ -115,8 +117,8 @@ export default function BoardsPage() {
                     {
                         id: 'title', header: '제목',
                         renderCell: (n) => (
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                <Chip sx={{p:1.5}} label={n.category} size="small" color={colorOf(n.category)}
+                            <Stack direction="row" alignItems="center" sx={{width: 1}} spacing={2}>
+                                <Chip sx={{p: 1}} label={n.category} size="small" color={colorOf(n.category)}
                                       variant="outlined"/>
                                 <Link to={`/boards/${n.id}`}
                                       style={{textDecoration: 'none', color: 'inherit', fontWeight: 450}}>
@@ -141,9 +143,10 @@ export default function BoardsPage() {
 
             {/*작성 다이얼로그 */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>공지사항 작성</DialogTitle>
-                <DialogContent sx={{pt: 2}}>
-                    <Stack spacing={2}>
+                <DialogTitle sx={{pt:3}}>공지사항 작성</DialogTitle>
+                <Box></Box>
+                <DialogContent>
+                    <Stack spacing={3}>
                         <TextField select label="카테고리" value={form.category}
                                    onChange={(e) => setForm(f => ({
                                        ...f, category: e.target.value as Notice['category']
@@ -154,7 +157,7 @@ export default function BoardsPage() {
                         </TextField>
                         <TextField label="제목" value={form.title || ''}
                                    onChange={(e) => setForm(f => ({...f, title: e.target.value}))}/>
-                        <TextField label="내용" multiline minRows={4} value={form.content || ''}
+                        <TextField label="내용" multiline minRows={10} value={form.content || ''}
                                    onChange={(e) => setForm(f => ({...f, content: e.target.value}))}/>
                     </Stack>
                 </DialogContent>

@@ -1,5 +1,5 @@
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Skeleton
+    Table, TableBody, TableCell, TableHead, TableRow, Skeleton
 } from '@mui/material';
 import {ReactNode, memo} from 'react';
 
@@ -38,73 +38,71 @@ function RawDataTable<T>({
                              loading,
                              emptyText = '데이터가 없습니다.',
                              getRowKey,
-                             variant = 'outlined',
-                             size = 'small',
                          }: Props<T>) {
     const rows = data ?? [];
 
     return (
-        <TableContainer component={Paper} variant={variant} sx={{ p:2}}>
-            <Table size={size} aria-label="data table">
-                <TableHead>
-                    <TableRow>
+
+        <Table aria-label="data table">
+            <TableHead>
+                <TableRow>
+                    {columns.map((c) => (
+                        <TableCell
+                            key={c.id}
+                            align={c.align ?? 'center'}
+                            sx={{width: c.width, p: 2,}}
+                        >
+                            {c.header}
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableHead>
+
+            <TableBody>
+                {/* 로딩 스켈레톤 */}
+                {loading && Array.from({length: 5}).map((_, i) => (
+                    <TableRow key={`sk-${i}`}>
                         {columns.map((c) => (
-                            <TableCell
-                                key={c.id}
-                                align={c.align ?? 'left'}
-                                sx={{width: c.width,p:1}}
-                            >
-                                {c.header}
+                            <TableCell key={`skc-${c.id}`}>
+                                <Skeleton height={20}/>
                             </TableCell>
                         ))}
                     </TableRow>
-                </TableHead>
+                ))}
 
-                <TableBody>
-                    {/* 로딩 스켈레톤 */}
-                    {loading && Array.from({length: 5}).map((_, i) => (
-                        <TableRow key={`sk-${i}`}>
-                            {columns.map((c) => (
-                                <TableCell key={`skc-${c.id}`}>
-                                    <Skeleton height={20}/>
-                                </TableCell>
-                            ))}
+                {/* 데이터 */}
+                {!loading && rows.length > 0 && rows.map((row, i) => {
+                    const rowKey = getRowKey?.(row, i) ?? i;
+                    return (
+                        <TableRow key={rowKey} hover tabIndex={0}>
+                            {columns.map((c) => {
+                                const base = (row as unknown as Record<string, unknown>)[c.id];
+                                const content = c.renderCell
+                                    ? c.renderCell(row, i)
+                                    : c.getValue
+                                        ? c.getValue(row, i)
+                                        : String(base ?? '');
+                                return (
+                                    <TableCell key={c.id} align={c.align ?? 'center'}>
+                                        {content}
+                                    </TableCell>
+                                );
+                            })}
                         </TableRow>
-                    ))}
+                    );
+                })}
 
-                    {/* 데이터 */}
-                    {!loading && rows.length > 0 && rows.map((row, i) => {
-                        const rowKey = getRowKey?.(row, i) ?? i;
-                        return (
-                            <TableRow key={rowKey} hover tabIndex={0}>
-                                {columns.map((c) => {
-                                    const base = (row as unknown as Record<string, unknown>)[c.id];
-                                    const content = c.renderCell
-                                        ? c.renderCell(row, i)
-                                        : c.getValue
-                                            ? c.getValue(row, i)
-                                            : String(base ?? '');
-                                    return (
-                                        <TableCell key={c.id} align={c.align ?? 'left'}>
-                                            {content}
-                                        </TableCell>
-                                    );
-                                })}
-                            </TableRow>
-                        );
-                    })}
+                {/* 빈 상태 */}
+                {!loading && rows.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={columns.length} align="center" sx={{py: 6, color: 'text.secondary'}}>
+                            {emptyText}
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
 
-                    {/* 빈 상태 */}
-                    {!loading && rows.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} align="center" sx={{py: 6, color: 'text.secondary'}}>
-                                {emptyText}
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
-        </TableContainer>
     );
 }
 

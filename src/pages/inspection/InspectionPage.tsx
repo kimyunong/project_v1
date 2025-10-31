@@ -102,7 +102,7 @@ export default function InspectionPage() {
         <Stack spacing={2}>
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6">점검 일지</Typography>
+                <Typography variant="h6" sx={{color: '#00d4ff'}}>점검 일지</Typography>
                 <Button variant="contained" onClick={() => setOpen(true)}>+ 점검 일지 등록</Button>
             </Stack>
 

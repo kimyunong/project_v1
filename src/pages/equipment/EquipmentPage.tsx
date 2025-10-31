@@ -4,7 +4,7 @@ import {useSearchParams} from "react-router-dom";
 import {
     Grid, Paper, Stack, Typography, Button, TextField, MenuItem,
     Chip, Pagination, Select, FormControl, InputLabel, Dialog, DialogTitle,
-    DialogContent, DialogActions,
+    DialogContent, DialogActions, Divider, Box
 } from '@mui/material';
 import {
     listEquipmentPaged,
@@ -129,6 +129,9 @@ export default function EquipmentPage() {
         <Stack spacing={2}>
             <Paper sx={{p: 2}}>
                 <Typography variant="h6" sx={{mb: 1, color: '#00d4ff'}}>최근 장비</Typography>
+
+                <Divider sx={{mt:2,mb:3}}/>
+
                 <DataTable
                     columns={[
                         {id: 'id', header: '번호', width: 60},
@@ -141,6 +144,8 @@ export default function EquipmentPage() {
                     data={eq.slice(0, 4)}
                 />
             </Paper>
+
+            <Divider sx={{mt:2,mb:3, border:'none'}}/>
 
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -186,28 +191,29 @@ export default function EquipmentPage() {
                                 <Chip label={
                                     eq.status === 'active' ? 'active' :
                                         eq.status === 'standby' ? 'standby' : 'inactive'
-                                } size="small" color={colorOf(eq.status)} variant="outlined"/>
+                                } color={colorOf(eq.status)} variant="outlined"/>
                             </Stack>
 
                             <Typography variant="body2" color="text.secondary">사용률: {eq.usage}%</Typography>
                             <Typography variant="body2" color="text.secondary">잔여시간: {eq.remaining}</Typography>
-                            <Typography variant="body2" color="text.secondary"
-                                        sx={{mb: 1}}>최종점검: {eq.lastCheck}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>최종점검: {eq.lastCheck}</Typography>
 
                             {/* 상태 변경 Select */}
-                            <FormControl size="small" sx={{width: 160}}>
-                                <InputLabel id={`st-${eq.id}`}>상태 수정</InputLabel>
-                                <Select
-                                    labelId={`st-${eq.id}`}
-                                    label="상태 수정"
-                                    value={eq.status}
-                                    onChange={(e) => changeStatus(eq.id, e)}
-                                >
-                                    <MenuItem value="active">active</MenuItem>
-                                    <MenuItem value="standby">standby</MenuItem>
-                                    <MenuItem value="inactive">inactive</MenuItem>
-                                </Select>
-                            </FormControl>
+                            <Box display='flex' justifyContent='end'>
+                                <FormControl size="small" sx={{width: 160}}>
+                                    <InputLabel id={`st-${eq.id}`}>상태 수정</InputLabel>
+                                    <Select
+                                        labelId={`st-${eq.id}`}
+                                        label="상태 수정"
+                                        value={eq.status}
+                                        onChange={(e) => changeStatus(eq.id, e)}
+                                    >
+                                        <MenuItem value="active">active</MenuItem>
+                                        <MenuItem value="standby">standby</MenuItem>
+                                        <MenuItem value="inactive">inactive</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Box>
                         </Paper>
                     </Grid>
                 ))}
@@ -233,7 +239,7 @@ export default function EquipmentPage() {
                 <DialogTitle>+ 장비 등록</DialogTitle>
 
                 <DialogContent sx={{pt: 2}}>
-                    <Stack spacing={2}>
+                    <Stack spacing={3}>
                         <TextField
                             label="장비명"
                             value={form.name}

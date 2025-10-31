@@ -52,28 +52,47 @@ const theme = createTheme({
             }
         },
         MuiButton: {
-            styleOverrides: {
-                root: {textTransform: 'none', borderRadius: 8, boxShadow: 'none'},
-                containedPrimary: {
-                    background: 'linear-gradient(135deg, #27c5ff, #00e5a8)',
-                    color: '#0a1929',
-                    fontWeight: 550,
-                    ':hover': {
-                        boxShadow: '0 5px 20px rgba(0, 212, 255, 0.25)',
+            variants: [
+                // contained + primary 조합에만 적용 (구 containedPrimary 대체)
+                {
+                    props: { variant: 'contained', color: 'primary' },
+                    style: {
+                        background: 'linear-gradient(135deg, #27c5ff, #00e5a8)',
+                        color: '#0a1929',
+                        fontWeight: 550,
+                        '&:hover': {
+                            boxShadow: '0 5px 20px rgba(0, 212, 255, 0.25)',
+                        },
                     },
                 },
-                outlined: {
-                    borderColor: 'rgba(0, 212, 255, 0.5)',
-                    ':hover': {
-                        borderColor: '#27c5ff',
-                        backgroundColor: 'rgba(0, 212, 255, 0.08)'
+                // outlined(색상 상관없이 공통) — 필요하면 color별로 props를 더 추가 가능
+                {
+                    props: { variant: 'outlined' },
+                    style: {
+                        borderColor: 'rgba(0, 212, 255, 0.5)',
+                        '&:hover': {
+                            borderColor: '#27c5ff',
+                            backgroundColor: 'rgba(0, 212, 255, 0.08)',
+                        },
                     },
+                },
+            ],
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                    borderRadius: 8,
+                    boxShadow: 'none',
                 },
             },
         },
         MuiChip: {
             styleOverrides: {
-                outlined: {borderColor: 'rgba(0, 212, 255, 0.3)'},
+                root: {
+                    borderRadius: 10, // 전역 radius 수정
+                },
+                outlined: {
+                    borderColor: 'none',
+                },
             },
         },
         MuiTextField: {

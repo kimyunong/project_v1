@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {
     Paper, Stack, Typography, Button, TextField, MenuItem, Chip, Pagination,
-    Dialog, DialogTitle, DialogContent, DialogActions, Grid
+    Dialog, DialogTitle, DialogContent, DialogActions, Grid,
+    Box
 } from '@mui/material';
 import {
     listPartsPaged, createPart, type Part, type ListPartsInput
@@ -37,7 +38,7 @@ export default function PartsPage() {
         const next = new URLSearchParams(params);
         next.set('page', String(page));
         if (target) next.set('target', target); else next.delete('target');
-        setParams(next, { replace: true });
+        setParams(next, {replace: true});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, target]);
 
@@ -45,7 +46,7 @@ export default function PartsPage() {
     const fetch = async () => {
         setLoading(true);
         try {
-            const input: ListPartsInput = { page, pageSize, q, target };
+            const input: ListPartsInput = {page, pageSize, q, target};
             const res = await listPartsPaged(input);
             setData(res.items);
             setTotal(res.total);
@@ -61,7 +62,7 @@ export default function PartsPage() {
 
     // 최근 파츠 로드 (상단 요약 테이블)
     useEffect(() => {
-        listPartsPaged({ page: 1, pageSize: 1000, q: '', target: '전체' }).then(r => setRecent(r.items.slice(0, 6)));
+        listPartsPaged({page: 1, pageSize: 1000, q: '', target: '전체'}).then(r => setRecent(r.items.slice(0, 6)));
     }, []);
 
     // 검색 트리거 (버튼/Enter)
@@ -76,9 +77,9 @@ export default function PartsPage() {
 
     // 수량 상태 칩 색
     const stockChip = (remain: number) => {
-        if (remain < 5) return { label: '재고 부족', color: 'error' as const };
-        if (remain < 10) return { label: '재고 주의', color: 'warning' as const };
-        return { label: '재고 충분', color: 'success' as const };
+        if (remain < 5) return {label: '재고 부족', color: 'error' as const};
+        if (remain < 10) return {label: '재고 주의', color: 'warning' as const};
+        return {label: '재고 충분', color: 'success' as const};
     };
 
     // 등록 다이얼로그
@@ -113,7 +114,7 @@ export default function PartsPage() {
         setQ('');
         setPage(1);
 
-        const res = await listPartsPaged({ page: 1, pageSize, q: '', target });
+        const res = await listPartsPaged({page: 1, pageSize, q: '', target});
         setData(res.items);
         setTotal(res.total);
     };
@@ -122,7 +123,7 @@ export default function PartsPage() {
         <Stack spacing={2}>
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6">부속품 관리</Typography>
+                <Typography variant="h6" sx={{color: '#00d4ff'}}>부속품 관리</Typography>
                 <Stack direction="row" spacing={1}>
                     <Button variant="outlined" disabled>엑셀 다운로드</Button>
                     <Button variant="contained" onClick={() => setOpen(true)}>+ 부속품 등록</Button>
@@ -130,12 +131,12 @@ export default function PartsPage() {
             </Stack>
 
             {/* 검색바 */}
-            <Paper sx={{ p: 2 }}>
+            <Paper sx={{p: 2}}>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                     <TextField
                         select size="small" label="검색 대상" value={target}
                         onChange={(e) => setTarget(e.target.value as Target)}
-                        sx={{ width: 160 }}
+                        sx={{width: 160}}
                     >
                         {TARGETS.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
                     </TextField>
@@ -144,7 +145,7 @@ export default function PartsPage() {
                         size="small" label="검색어" value={inputQ}
                         onChange={(e) => setInputQ(e.target.value)}
                         onKeyDown={onKeyDown}
-                        sx={{ minWidth: 260, flex: 1 }}
+                        sx={{minWidth: 260, flex: 1}}
                     />
 
                     <Button variant="outlined" onClick={onSearch}>검색</Button>
@@ -156,18 +157,25 @@ export default function PartsPage() {
                 {data.map(p => {
                     const sc = stockChip(p.remainQty);
                     return (
-                        <Grid key={p.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                            <Paper sx={{ p: 2 }}>
-                                <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                        <Grid key={p.id} size={{xs: 12, sm: 6, md: 4}}>
+                            <Paper sx={{p: 2}}>
+                                <Stack direction="row" alignItems="flex-start" justifyContent="space-between"
+                                       sx={{mb: 0.5}}>
                                     <Typography fontWeight={700}>{p.name}</Typography>
-                                    <Chip label={p.type} variant="outlined" size="small" color="info" />
+                                    <Chip label={p.type} variant="outlined" color="info"/>
                                 </Stack>
                                 <Typography variant="body2" color="text.secondary">파트번호: {p.partNo}</Typography>
                                 <Typography variant="body2" color="text.secondary">장비: {p.equipment}</Typography>
-                                <Typography variant="body2" color="text.secondary">단가: ₩{p.unitPrice.toLocaleString()}</Typography>
-                                <Typography variant="body2" color="text.secondary">총/사용/잔여: {p.totalQty}/{p.usedQty}/{p.remainQty}</Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>최초선적일: {p.firstShipDate}</Typography>
-                                <Chip label={sc.label} color={sc.color} size="small" />
+                                <Typography variant="body2" color="text.secondary">단가:
+                                    ₩{p.unitPrice.toLocaleString()}</Typography>
+                                <Typography variant="body2"
+                                            color="text.secondary">총/사용/잔여: {p.totalQty}/{p.usedQty}/{p.remainQty}</Typography>
+                                <Typography variant="body2" color="text.secondary"
+                                            sx={{mb: 1}}>최초선적일: {p.firstShipDate}</Typography>
+                                <Box display='flex' justifyContent='end'>
+                                    <Chip label={sc.label} color={sc.color}/>
+                                </Box>
+
                             </Paper>
                         </Grid>
                     );
@@ -175,7 +183,7 @@ export default function PartsPage() {
             </Grid>
 
             {/* 페이지네이션 */}
-            <Stack alignItems="center" sx={{ mt: 1 }}>
+            <Stack alignItems="center" sx={{mt: 1}}>
                 <Pagination
                     count={Math.max(1, Math.ceil(total / pageSize))}
                     page={page}
@@ -187,32 +195,32 @@ export default function PartsPage() {
             {/* 등록 다이얼로그 */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>+ 부속품 등록</DialogTitle>
-                <DialogContent sx={{ pt: 2 }}>
-                    <Stack spacing={2}>
+                <DialogContent sx={{pt: 2}}>
+                    <Stack spacing={3}>
                         <TextField
                             label="부속품명"
                             value={form.name}
-                            onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                            onChange={(e) => setForm(f => ({...f, name: e.target.value}))}
                             size="small"
                             fullWidth
                         />
                         <TextField
                             label="파트번호"
                             value={form.partNo}
-                            onChange={(e) => setForm(f => ({ ...f, partNo: e.target.value }))}
+                            onChange={(e) => setForm(f => ({...f, partNo: e.target.value}))}
                             size="small"
                             fullWidth
                         />
                         <TextField
                             label="소유 장비"
                             value={form.equipment}
-                            onChange={(e) => setForm(f => ({ ...f, equipment: e.target.value }))}
+                            onChange={(e) => setForm(f => ({...f, equipment: e.target.value}))}
                             size="small"
                             fullWidth
                         />
                         <TextField
                             select label="유형" value={form.type}
-                            onChange={(e) => setForm(f => ({ ...f, type: e.target.value as Part['type'] }))}
+                            onChange={(e) => setForm(f => ({...f, type: e.target.value as Part['type']}))}
                             size="small"
                             fullWidth
                         >
@@ -220,29 +228,29 @@ export default function PartsPage() {
                             <MenuItem value="Store">Store</MenuItem>
                         </TextField>
                         <TextField
-                            label="단가 (₩)" type="number" sx={{ min: 0 }}
+                            label="단가 (₩)" type="number" sx={{min: 0}}
                             value={form.unitPrice}
-                            onChange={(e) => setForm(f => ({ ...f, unitPrice: Number(e.target.value) }))}
+                            onChange={(e) => setForm(f => ({...f, unitPrice: Number(e.target.value)}))}
                             size="small" fullWidth
                         />
                         <Stack direction="row" spacing={1}>
                             <TextField
-                                label="총수량" type="number" sx={{ min: 0 }}
+                                label="총수량" type="number" sx={{min: 0}}
                                 value={form.totalQty}
-                                onChange={(e) => setForm(f => ({ ...f, totalQty: Number(e.target.value) }))}
+                                onChange={(e) => setForm(f => ({...f, totalQty: Number(e.target.value)}))}
                                 size="small" fullWidth
                             />
                             <TextField
-                                label="사용" type="number" sx={{ min: 0 }}
+                                label="사용" type="number" sx={{min: 0}}
                                 value={form.usedQty}
-                                onChange={(e) => setForm(f => ({ ...f, usedQty: Number(e.target.value) }))}
+                                onChange={(e) => setForm(f => ({...f, usedQty: Number(e.target.value)}))}
                                 size="small" fullWidth
                             />
                         </Stack>
                         <TextField
                             label="최초선적일 (YYYY-MM-DD)"
                             value={form.firstShipDate}
-                            onChange={(e) => setForm(f => ({ ...f, firstShipDate: e.target.value }))}
+                            onChange={(e) => setForm(f => ({...f, firstShipDate: e.target.value}))}
                             size="small" fullWidth
                         />
                     </Stack>

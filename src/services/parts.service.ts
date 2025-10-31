@@ -1,4 +1,5 @@
 export type PartType = 'SparePart' | 'Store';
+export const partTypes = ['SparePart', 'Store'] as const satisfies readonly PartType[];
 
 export type Part = {
     id: number;
@@ -20,11 +21,17 @@ export type ListPartsInput = {
     target?: '전체' | '부속품명' | '장비' | '유형' | '파트번호';
 };
 
+const toPartType = (v: string): PartType =>
+    v === 'SparePart' ? 'SparePart' : 'Store';
+
 // ---- seed (새로고침 시 초기화) ----
 import { parts as seed } from '@/mocks/seed';
 
 // 메모리 DB
-let db: Part[] = seed.map(p => ({ ...p }));
+let db: Part[] = seed.map(p => ({
+    ...p,
+    type: toPartType(String(p.type)),
+}));
 let nextId = (db.length ? Math.max(...db.map(p => p.id)) : 0) + 1;
 
 function matches(p: Part, q: string, target: ListPartsInput['target']) {
@@ -75,12 +82,6 @@ export async function updatePartQty(id: number, usedQty: number, totalQty?: numb
             : p
     );
     return db.find(p => p.id === id) ?? null;
-}
-
-// 개발 편의: 메모리 DB 리셋
-export function __resetPartsForDev() {
-    db = seed.map(p => ({ ...p }));
-    nextId = (db.length ? Math.max(...db.map(p => p.id)) : 0) + 1;
 }
 
 

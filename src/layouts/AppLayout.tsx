@@ -4,19 +4,21 @@ import {
     List, ListSubheader, ListItemButton, Button, ListItemIcon,
     ListItemText, Box, Divider
 } from '@mui/material'
-import DashboardIcon from '@mui/icons-material/Dashboard'
-import CampaignIcon from '@mui/icons-material/Campaign'
-import BuildIcon from '@mui/icons-material/Build'
-import HandymanIcon from '@mui/icons-material/Handyman'
-import FactCheckIcon from '@mui/icons-material/FactCheck'
-import NoteAltIcon from '@mui/icons-material/NoteAlt'
-import ExtensionIcon from '@mui/icons-material/Extension'
 import GroupIcon from '@mui/icons-material/Group'
 import LogoutIcon from '@mui/icons-material/Logout'
 import {logout} from '@/auth'
 import * as React from 'react'
 
 const drawerWidth = 240
+
+// 이모지 아이콘을 MUI 아이콘처럼 쓰기
+function EmojiIcon({symbol}: { symbol: string }) {
+    return (
+        <Box aria-hidden sx={{fontSize: 20, lineHeight: 1, display: 'inline-flex'}}>
+            {symbol}
+        </Box>
+    )
+}
 
 // 내비게이션 설정(섹션 기반)
 type NavItem = { to: string; label: string; icon: React.ReactNode }
@@ -26,36 +28,36 @@ const navSections: NavSection[] = [
     {
         title: '메인',
         items: [
-            {to: '/dashboard', label: '대시보드', icon: <DashboardIcon/>},
+            {to: '/dashboard', label: '대시보드', icon: <EmojiIcon symbol="📊"/>},
         ],
     },
     {
         title: '게시판',
         items: [
-            {to: '/boards', label: '공지사항', icon: <CampaignIcon/>},
+            {to: '/boards', label: '공지사항', icon: <EmojiIcon symbol="📢"/>},
         ],
     },
     {
         title: '장비 관리',
         items: [
-            {to: '/equipment', label: '장비 관리', icon: <BuildIcon/>},
-            {to: '/parts', label: '부속 관리', icon: <HandymanIcon/>},
-            {to: '/inspection', label: '점검 일지', icon: <FactCheckIcon/>},
+            {to: '/equipment', label: '장비 관리', icon: <EmojiIcon symbol="⚙️"/>},
+            {to: '/parts', label: '부속 관리', icon: <EmojiIcon symbol="🔧"/>},
+            {to: '/inspection', label: '점검 일지', icon: <EmojiIcon symbol="📝"/>},
         ],
     },
     {
         title: '보고서',
         items: [
 
-            {to: '/operation', label: '운영 일지', icon: <NoteAltIcon/>},
+            {to: '/operation', label: '운영 일지', icon: <EmojiIcon symbol="📄"/>},
 
         ],
     },
     {
         title: '코드/사용자',
         items: [
-            {to: '/codes', label: '코드 관리', icon: <ExtensionIcon/>},
-            {to: '/users', label: '사용자 관리', icon: <GroupIcon/>}
+            {to: '/codes', label: '코드 관리', icon: <EmojiIcon symbol="🧩"/>},
+            {to: '/users', label: '사용자 관리', icon: <GroupIcon sx={{fontSize: 20}}/>}
         ],
     },
 ]
@@ -115,9 +117,17 @@ export default function AppLayout() {
                 position="fixed"
                 sx={{zIndex: (t) => t.zIndex.drawer + 1, p: 0.4}}>
                 <Toolbar>
-                    <Typography variant="h6" sx={{flexGrow: 1, color: '#00d4ff'}}>
-                        🧊 데이터 관리 시스템
-                    </Typography>
+                    <Box sx={{flexGrow: 1}}>
+                        <Typography variant="h5" fontWeight={700} sx={{color: '#00d4ff'}}>
+                            🧊 데이터 관리 시스템
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            sx={{mt: 0.25, pl: 5, fontSize: 13}}
+                        >
+                            연구장비 및 데이터 관리 플랫폼
+                        </Typography>
+                    </Box>
                     <Button
                         color="inherit"
                         startIcon={<LogoutIcon/>}
