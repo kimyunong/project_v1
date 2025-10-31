@@ -117,28 +117,35 @@ export default function AppLayout() {
                 position="fixed"
                 sx={{zIndex: (t) => t.zIndex.drawer + 1, p: 0.4}}>
                 <Toolbar>
-                    <Box sx={{flexGrow: 1}}>
-                        <Typography
-                            component='a'
-                            href="https://preeminent-chebakia-1f867d.netlify.app/dashboard?page=1&target=%EC%A0%84%EC%B2%B4"
-                            variant="h5"
-                            fontWeight={700}
-                            sx={{
-                                color: '#00d4ff',
-                                textDecoration: 'none',
-                                '&:hover': {
+                    <Box sx={{flexGrow: 1}} display='flex' gap="15px">
+                        <Box sx={{}} display='flex' justifyContent='center' alignItems='center'>
+                            <Typography sx={{fontSize:24}}>🧊</Typography>
+                        </Box>
+                        <Box>
+                            <Typography
+                                component='a'
+                                href="https://preeminent-chebakia-1f867d.netlify.app/dashboard?page=1&target=%EC%A0%84%EC%B2%B4"
+                                fontWeight={700}
+                                sx={{
+                                    fontSize: 18,
+                                    color: '#00d4ff',
                                     textDecoration: 'none',
-                                    opacity: 0.9,
-                                },
-                            }}>
-                            🧊 데이터 관리 시스템
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            sx={{mt: 0.25, pl: 5, fontSize: 13}}
-                        >
-                            Research-Data Management System
-                        </Typography>
+                                    '&:hover': {
+                                        textDecoration: 'none',
+                                        opacity: 0.9,
+                                    },
+                                }}>
+                                데이터 관리 시스템
+                            </Typography>
+                            <Typography
+                                color="text.secondary"
+                                sx={{fontSize: 12}}
+                            >
+                                Research-Data Management System
+                            </Typography>
+                        </Box>
+
+
                     </Box>
                     <Button
                         color="inherit"
