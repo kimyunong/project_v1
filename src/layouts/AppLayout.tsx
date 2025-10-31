@@ -123,7 +123,14 @@ export default function AppLayout() {
                             href="https://preeminent-chebakia-1f867d.netlify.app/dashboard?page=1&target=%EC%A0%84%EC%B2%B4"
                             variant="h5"
                             fontWeight={700}
-                            sx={{color: '#00d4ff'}}>
+                            sx={{
+                                color: '#00d4ff',
+                                textDecoration: 'none',
+                                '&:hover': {
+                                    textDecoration: 'none',
+                                    opacity: 0.9,
+                                },
+                            }}>
                             🧊 데이터 관리 시스템
                         </Typography>
                         <Typography
