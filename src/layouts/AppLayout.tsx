@@ -118,7 +118,12 @@ export default function AppLayout() {
                 sx={{zIndex: (t) => t.zIndex.drawer + 1, p: 0.4}}>
                 <Toolbar>
                     <Box sx={{flexGrow: 1}}>
-                        <Typography variant="h5" fontWeight={700} sx={{color: '#00d4ff'}}>
+                        <Typography
+                            component='a'
+                            href="https://preeminent-chebakia-1f867d.netlify.app/dashboard?page=1&target=%EC%A0%84%EC%B2%B4"
+                            variant="h5"
+                            fontWeight={700}
+                            sx={{color: '#00d4ff'}}>
                             🧊 데이터 관리 시스템
                         </Typography>
                         <Typography
