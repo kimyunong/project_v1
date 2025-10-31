@@ -135,7 +135,7 @@ export default function AppLayout() {
                         </Typography>
                         <Typography
                             color="text.secondary"
-                            sx={{mt: 0.25, pl: 1, fontSize: 13}}
+                            sx={{mt: 0.25, pl: 5, fontSize: 13}}
                         >
                             Research-Data Management System
                         </Typography>
