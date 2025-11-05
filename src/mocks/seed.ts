@@ -1,5 +1,6 @@
 import {DateISO} from '@/types/common'
 
+// 공지사항
 export const notices = [
     {
         id: 1,
@@ -48,7 +49,7 @@ export const notices = [
         content: '북극 탐사 일정 및 탑승 절차 안내입니다.'
     },
 ]
-
+// 장비 현황
 export const equipment = [
     {id: 1, name: 'CTD 센서', status: 'active', usage: 45, remaining: '235h', lastCheck: '2025-10-15'},
     {id: 2, name: '멀티빔 음향측심기', status: 'active', usage: 78, remaining: '110h', lastCheck: '2025-10-14'},
@@ -57,7 +58,7 @@ export const equipment = [
     {id: 5, name: '수중 카메라', status: 'standby', usage: 34, remaining: '330h', lastCheck: '2025-10-13'},
     {id: 6, name: '해저 퇴적물 채취기', status: 'inactive', usage: 5, remaining: '0h', lastCheck: '2025-10-01'}
 ]
-
+// 부속 소모품
 export const parts = [
     {
         id: 1,
@@ -132,7 +133,7 @@ export const parts = [
         firstShipDate: '2024-07-25'
     },
 ]
-
+// 점검/대여/공동활용
 export const inspectionLogs = [
     {
         id: 1,
@@ -179,7 +180,7 @@ export const inspectionLogs = [
         purpose: '남극 기상 관측'
     }
 ]
-
+// 실제 장비 운영 일지
 export const operationLogs = [
     {
         id: 1,

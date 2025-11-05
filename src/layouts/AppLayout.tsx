@@ -103,23 +103,24 @@ function NavSectionBlock({section, pathname}: { section: NavSection; pathname?: 
 }
 
 export default function AppLayout() {
-    const {pathname} = useLocation()
+    const {pathname} = useLocation();
     const navigate = useNavigate();
 
     const onLogout = () => {
-        logout();
-        navigate('/login');
+        logout(); // 로컬스토리지 로그인 삭제
+        navigate('/login'); // 로그인 화면으로 이동
     };
 
     return (
         <Box sx={{display: 'flex', minHeight: '100vh', backgroundColor: 'background.default'}}>
+            {/* 상단 AppBar */}
             <AppBar
                 position="fixed"
                 sx={{zIndex: (t) => t.zIndex.drawer + 1, p: 0.4}}>
                 <Toolbar>
                     <Box sx={{flexGrow: 1}} display='flex' gap="15px">
-                        <Box sx={{}} display='flex' justifyContent='center' alignItems='center'>
-                            <Typography sx={{fontSize:24}}>🧊</Typography>
+                        <Box display='flex' justifyContent='center' alignItems='center'>
+                            <Typography sx={{fontSize: 24}}>🧊</Typography>
                         </Box>
                         <Box>
                             <Typography
@@ -180,6 +181,7 @@ export default function AppLayout() {
 
             <Box component="main" sx={{flexGrow: 1, p: 3}}>
                 <Toolbar/>
+                {/* 하위 라우트 페에지 렌더 */}
                 <Outlet/>
             </Box>
         </Box>

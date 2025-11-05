@@ -1,0 +1,4676 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>선박용 웹 GIS 모니터링 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/leaflet-providers@1.13.0/leaflet-providers.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #0a1929;
+        color: #fff;
+        overflow: hidden;
+      }
+
+      .app-container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        background: rgba(13, 31, 51, 0.95);
+        border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        z-index: 100;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .logo-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .logo-subtitle {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .time-display {
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+      }
+
+      .time-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 15px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+      }
+
+      .time-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 3px;
+      }
+
+      .time-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d4ff;
+        font-family: 'Courier New', monospace;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 15px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+      }
+
+      .main-content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        /* padding-bottom: 50px; */
+      }
+
+      .sidebar {
+        width: 80px;
+        background: rgba(13, 31, 51, 0.95);
+        border-right: 1px solid rgba(0, 212, 255, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        backdrop-filter: blur(10px);
+      }
+
+      .sidebar-btn {
+        width: 56px;
+        height: 56px;
+        margin: 8px 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 24px;
+        position: relative;
+      }
+
+      .sub-tool-panel {
+        background: rgba(0, 0, 0, 0.75);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        color: #fff;
+      }
+
+      .basemap-panel {
+        animation: fadeIn 0.2s ease-in-out;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .sidebar-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        transform: translateX(5px);
+      }
+
+      .sidebar-btn.active {
+        background: rgba(0, 212, 255, 0.3);
+        border-color: #00d4ff;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+      }
+
+      .sidebar-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 4px;
+      }
+
+      .map-container {
+        flex: 1;
+        position: relative;
+        background: #0a1929;
+      }
+
+      .map-canvas {
+        width: 100%;
+        height: 100%;
+        background: #1a3a52;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .world-map-base {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #1a3a52;
+      }
+
+      .map-grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.03) 0px,
+            transparent 1px,
+            transparent 50px,
+            rgba(255, 255, 255, 0.03) 51px
+          ),
+          repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0px, transparent 1px, transparent 50px, rgba(255, 255, 255, 0.03) 51px);
+        pointer-events: none;
+      }
+
+      .latitude-lines,
+      .longitude-lines {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .lat-line,
+      .lon-line {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .lat-line {
+        width: 100%;
+        height: 1px;
+      }
+
+      .lon-line {
+        height: 100%;
+        width: 1px;
+      }
+
+      .continents {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .continent {
+        position: absolute;
+        background: #2d5a3f;
+        border-radius: 20% 30% 25% 35%;
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .ship-icon {
+        position: absolute;
+        top: 45%;
+        left: 40%;
+        transform: translate(-50%, -50%);
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        animation: gpsPulse 2s ease-in-out infinite;
+      }
+
+      .gps-outer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid #00d4ff;
+        border-radius: 50%;
+        background: rgba(0, 212, 255, 0.1);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+      }
+
+      .gps-inner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50%;
+        height: 50%;
+        background: #00d4ff;
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+      }
+
+      .gps-direction {
+        position: absolute;
+        top: 3px;
+        right: -2px;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 10px solid #ff4444;
+        filter: drop-shadow(0 0 5px rgba(255, 68, 68, 0.8));
+        transform: rotate(60deg);
+        transform-origin: center;
+      }
+
+      .gps-crosshair-v {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1.5px;
+        height: 100%;
+        background: linear-gradient(180deg, transparent 0%, #00d4ff 43%, transparent 50%, #00d4ff 57%, transparent 100%);
+      }
+
+      .gps-crosshair-h {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 1.5px;
+        width: 100%;
+        background: linear-gradient(90deg, transparent 0%, #00d4ff 43%, transparent 50%, #00d4ff 57%, transparent 100%);
+      }
+
+      @keyframes gpsPulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.6));
+        }
+
+        50% {
+          filter: drop-shadow(0 0 20px rgba(0, 212, 255, 1));
+        }
+      }
+
+      .gps-ring {
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        width: calc(100% + 8px);
+        height: calc(100% + 8px);
+        border: 2px solid rgba(0, 212, 255, 0.3);
+        border-radius: 50%;
+        animation: ringPulse 2s ease-out infinite;
+      }
+
+      @keyframes ringPulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        100% {
+          transform: scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      .route-path {
+        position: absolute;
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      .past-route {
+        stroke: #00d4ff;
+        stroke-width: 5;
+        fill: none;
+        stroke-dasharray: 1, 12;
+        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.8));
+        opacity: 1;
+        stroke-linecap: round;
+      }
+
+      .trail-dots {
+        position: absolute;
+        pointer-events: none;
+        z-index: 45;
+      }
+
+      .trail-dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: radial-gradient(circle, #00d4ff 0%, #0099ff 100%);
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 1), 0 0 8px rgba(0, 212, 255, 1), inset 0 0 5px rgba(255, 255, 255, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        animation: fadeTrail 3s ease-in-out infinite;
+      }
+
+      @keyframes fadeTrail {
+        0%,
+        100% {
+          opacity: 0.5;
+          transform: scale(0.85);
+          box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 5px rgba(0, 212, 255, 0.8);
+        }
+
+        50% {
+          opacity: 1;
+          transform: scale(1.15);
+          box-shadow: 0 0 20px rgba(0, 212, 255, 1), 0 0 10px rgba(0, 212, 255, 1), 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+      }
+
+      .trail-line {
+        position: absolute;
+        height: 4px;
+        background: repeating-linear-gradient(90deg, #00d4ff 0px, #00d4ff 8px, transparent 8px, transparent 16px);
+        opacity: 0.85;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.7);
+        border-radius: 2px;
+      }
+
+      .future-route {
+        stroke: #ffaa00;
+        stroke-width: 3;
+        fill: none;
+        stroke-dasharray: 10, 5;
+        filter: drop-shadow(0 0 5px rgba(255, 170, 0, 0.5));
+        animation: dashAnimation 1s linear infinite;
+      }
+
+      @keyframes dashAnimation {
+        to {
+          stroke-dashoffset: -15;
+        }
+      }
+
+      .map-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .control-btn {
+        width: 40px;
+        height: 40px;
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        font-size: 18px;
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      .control-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        transform: scale(1.1);
+        color: #00ffaa;
+      }
+
+      .map-info {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        padding: 15px 30px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        gap: 30px;
+        align-items: center;
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .info-group {
+        display: flex;
+        gap: 25px;
+        align-items: center;
+      }
+
+      .info-divider {
+        width: 1px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .route-progress {
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+        padding: 12px 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        min-width: 550px;
+      }
+
+      .progress-header {
+        font-size: 11px;
+        color: #00d4ff;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        min-width: 90px;
+      }
+
+      .progress-bar-container {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 100px;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00d4ff, #00ffaa);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+      }
+
+      .progress-stats {
+        display: flex;
+        gap: 16px;
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .stat-value {
+        color: #00ffaa;
+        font-weight: bold;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 100px;
+      }
+
+      .info-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .info-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .right-panel {
+        width: 350px;
+        background: #0d1f33;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panel-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .panel-content {
+        padding: 20px;
+        flex: 1;
+      }
+
+      .sensor-group {
+        margin-bottom: 25px;
+      }
+
+      .group-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .sensor-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .sensor-card:hover {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: #00d4ff;
+        transform: translateX(5px);
+      }
+
+      .sensor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .sensor-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .sensor-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        box-shadow: 0 0 10px currentColor;
+      }
+
+      .status-active {
+        background: #00ff88;
+        color: #00ff88;
+      }
+
+      .status-warning {
+        background: #ffaa00;
+        color: #ffaa00;
+      }
+
+      .status-inactive {
+        background: #ff4444;
+        color: #ff4444;
+      }
+
+      .sensor-data {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .data-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .data-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 3px;
+      }
+
+      .data-value {
+        font-size: 15px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .mini-graph {
+        width: 100%;
+        height: 40px;
+        margin-top: 10px;
+        position: relative;
+      }
+
+      .graph-bar {
+        position: absolute;
+        bottom: 0;
+        width: 8%;
+        background: linear-gradient(180deg, #00d4ff, rgba(0, 212, 255, 0.3));
+        border-radius: 2px 2px 0 0;
+        transition: height 0.3s ease;
+      }
+
+      .graph-bar-hour {
+        position: absolute;
+        bottom: 0;
+        width: 2%;
+        background: linear-gradient(180deg, #00d4ff, rgba(0, 212, 255, 0.3));
+        border-radius: 2px 2px 0 0;
+        transition: height 0.3s ease;
+      }
+
+      .equipment-indicators {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .indicator-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .indicator-card:hover {
+        background: rgba(0, 212, 255, 0.1);
+        transform: scale(1.05);
+      }
+
+      .indicator-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      .indicator-name {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 5px;
+      }
+
+      .indicator-value {
+        font-size: 14px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff4444;
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-weight: bold;
+      }
+
+      .tab-container {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        gap: 5px;
+        padding: 10px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(10, 20, 30, 0.95); /* 배경 유지 */
+        backdrop-filter: blur(4px); /* 약간의 블러 */
+        border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+      }
+
+      .tab-btn {
+        flex: 1;
+        padding: 10px 5px;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 12px;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 45px;
+      }
+
+      .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+      }
+
+      .tab-btn.active {
+        background: rgba(0, 212, 255, 0.2);
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      .marker {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        z-index: 200;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .marker-pin {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #ff4444, #cc0000);
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 0 20px rgba(255, 68, 68, 0.8);
+        border: 3px solid #fff;
+      }
+
+      .marker:hover .marker-pin {
+        transform: rotate(-45deg) scale(1.3);
+        box-shadow: 0 0 30px rgba(255, 68, 68, 1);
+      }
+
+      .marker-inner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+      }
+
+      .marker-label {
+        position: absolute;
+        top: -45px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 68, 68, 0.95);
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .marker-label::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid rgba(255, 68, 68, 0.95);
+      }
+
+      .marker-distance {
+        position: absolute;
+        top: -70px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 212, 255, 0.9);
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 10px;
+        font-weight: bold;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      .layer-control {
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+        backdrop-filter: blur(10px);
+        max-width: 300px;
+      }
+
+      .sub-tool-panel {
+        position: absolute;
+        left: 14px;
+        top: 10px;
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        min-width: 280px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        z-index: 200;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .sub-tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+      }
+
+      .sub-tool-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .close-btn {
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 68, 68, 0.2);
+        border: 1px solid rgba(255, 68, 68, 0.5);
+        border-radius: 50%;
+        color: #ff4444;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 68, 68, 0.4);
+        transform: scale(1.1);
+      }
+
+      .tool-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .tool-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+      }
+
+      .tool-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        transform: translateY(-2px);
+      }
+
+      .tool-btn.active {
+        background: rgba(0, 212, 255, 0.3);
+        border-color: #00d4ff;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+      }
+
+      .tool-icon {
+        font-size: 24px;
+      }
+
+      .tool-name {
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .tool-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* 기본 항목: 그대로 둠 */
+      .tool-list-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 13px;
+      }
+
+      .tool-list-item:hover {
+        background: rgba(0, 212, 255, 0.15);
+        border-color: #00d4ff;
+        transform: translateX(5px);
+      }
+
+      .tool-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 12px 0;
+      }
+
+      .unit-selector {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .unit-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s ease;
+      }
+
+      .unit-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        color: #fff;
+      }
+
+      .unit-btn.active {
+        background: rgba(0, 212, 255, 0.3);
+        border-color: #00d4ff;
+        color: #00d4ff;
+      }
+
+      .layer-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .layer-item:hover {
+        background: rgba(0, 212, 255, 0.1);
+      }
+
+      .checkbox {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #00d4ff;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #00d4ff;
+      }
+
+      .layer-name {
+        flex: 1;
+        font-size: 13px;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      }
+
+      .modal {
+        background: #0d1f33;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 15px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #00d4ff;
+        margin-bottom: 20px;
+      }
+
+      .modal-content {
+        margin-bottom: 20px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #00d4ff, #0099ff);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 212, 255, 0.3);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 255, 0.5);
+      }
+
+      .compass {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 90px;
+        height: 90px;
+        background: rgba(13, 31, 51, 0.95);
+        border: 3px solid rgba(0, 212, 255, 0.4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .compass-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .compass-rose {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .compass-needle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        z-index: 10;
+        transform: translate(-50%, -50%) rotate(60deg);
+      }
+
+      .compass-needle-north {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 30px solid #ff4444;
+        filter: drop-shadow(0 0 3px rgba(255, 68, 68, 0.6));
+      }
+
+      .compass-needle-south {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 30px solid #ffffff;
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.4));
+      }
+
+      .compass-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: #00d4ff;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        z-index: 15;
+        box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+      }
+
+      .compass-labels {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .compass-label {
+        position: absolute;
+        font-size: 14px;
+        font-weight: bold;
+        color: #00d4ff;
+        text-shadow: 0 0 5px rgba(0, 212, 255, 0.5);
+      }
+
+      .compass-tick {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .compass-tick-major {
+        width: 2px;
+        height: 10px;
+        background: rgba(0, 212, 255, 0.8);
+      }
+
+      .compass-tick-minor {
+        width: 1px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.4);
+      }
+
+      .compass-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 50%;
+        top: 0;
+        left: 0;
+      }
+
+      .tooltip {
+        position: absolute;
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.5);
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .bottom-status-bar {
+        background: rgba(13, 31, 51, 0.95);
+        border-top: 1px solid rgba(0, 212, 255, 0.3);
+        padding: 12px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .status-icon {
+        font-size: 16px;
+      }
+
+      .status-text {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .status-value {
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      .connection-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .connection-dot {
+        width: 8px;
+        height: 8px;
+        background: #00ffaa;
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .connection-text {
+        font-size: 11px;
+        color: #00ffaa;
+      }
+
+      /* ------------------- */
+
+      /* 기존 tool-list-item 유지하되, 베이스맵 항목만 column 정렬 */
+      /* 지도 베이스맵 항목만 세로 정렬 */
+      .tool-list-item.basemap-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      /* 버튼(아이콘+텍스트)은 flex 가로 정렬 */
+      .tool-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+
+      /* 패널은 아래로 내려오도록 */
+      .basemap-panel {
+        position: static;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        padding: 10px;
+        width: 100%;
+        margin-top: 6px;
+        animation: fadeIn 0.2s ease-in-out;
+        min-width: auto;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-5px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Leaflet Draw 기본 컨트롤 숨기기 */
+      .leaflet-draw,
+      .leaflet-control {
+        display: none !important;
+      }
+
+      .leaflet-overlay-pane img {
+        filter: saturate(1.2) contrast(1.05);
+      }
+
+      /* 해수면 온도 이미지가 지도 위로 자연스럽게 섞이도록 */
+      .leaflet-overlay-pane img[src*='global.large.gif'] {
+        mix-blend-mode: lighten;
+        filter: saturate(1.2) brightness(1.1);
+      }
+
+      /* 염분 지도 - 차분한 블루톤 */
+      .leaflet-overlay-pane img[src*='World_ocean_salinity_2009.png'] {
+        mix-blend-mode: overlay;
+        filter: contrast(1.1) brightness(1.05);
+      }
+
+      .leaflet-overlay-pane img[src*='SeaSurfaceTemperature'] {
+        filter: contrast(1.1) saturate(1.2) brightness(1.05);
+      }
+
+      .leaflet-overlay-pane img[src*='OceanBasemap'] {
+        mix-blend-mode: multiply;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel" defer>
+      const { useState, useEffect } = React;
+
+      function App() {
+        const [currentTime, setCurrentTime] = useState(new Date());
+        const [activeTab, setActiveTab] = useState('monitoring');
+        const [showNotification, setShowNotification] = useState(true);
+        const [selectedSensor, setSelectedSensor] = useState(null);
+        const [selectedView, setSelectedView] = useState('world');
+        const [showLayerControl, setShowLayerControl] = useState(false);
+        const [activeToolPanel, setActiveToolPanel] = useState(null);
+        const [activeMeasureTool, setActiveMeasureTool] = useState(null);
+        const [selectedUnit, setSelectedUnit] = useState('km');
+        const [baseMap, setBaseMap] = useState('satellite');
+        const [showBasemapPanel, setShowBasemapPanel] = useState(false);
+        const [markers, setMarkers] = useState([]);
+        const [showCaptureModal, setShowCaptureModal] = useState(false);
+        const [captureDataUrl, setCaptureDataUrl] = useState(null);
+        const [drawType, setDrawType] = useState(null);
+
+        const [activeLayers, setActiveLayers] = useState({
+          temperature: true,
+          salinity: false,
+          depth: false,
+          trail: true,
+          eez: false,
+        });
+
+        // 버튼 클릭 핸들러
+        const handleDrawSelect = (type) => {
+          setDrawType(type);
+        };
+
+        const baseLayers = {
+          satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri',
+          }),
+          osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+          }),
+          topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenTopoMap',
+          }),
+        };
+
+        useEffect(() => {
+          const timer = setInterval(() => {
+            setCurrentTime(new Date());
+          }, 1000);
+          return () => clearInterval(timer);
+        }, []);
+
+        useEffect(() => {
+          const map = L.map('map', {
+            center: [64, -47],
+            zoom: 5,
+            zoomControl: false,
+            rotate: true, // 회전 기능 활성화
+            bearing: 0, // 초기 각도
+          });
+
+          // 플러그인 가용성 검증 + 초기화
+          if (typeof map.setBearing === 'function') {
+            map.setBearing(0); // 초기 bearing 명시
+          } else {
+            console.error('[rotate] leaflet-rotate가 로드되지 않았습니다.');
+          }
+
+          // 위성 베이스맵
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri — Source: Esri, Earthstar Geographics',
+          }).addTo(map);
+
+          // Draw Layer 생성
+          const drawnItems = new L.FeatureGroup();
+          map.addLayer(drawnItems);
+
+          // Draw Control 인스턴스 생성
+          const drawControl = new L.Control.Draw({
+            draw: {
+              polygon: false,
+              polyline: false,
+              rectangle: false,
+              circle: false,
+              marker: false,
+              circlemarker: false,
+            },
+            edit: {
+              featureGroup: drawnItems,
+            },
+          });
+          map.addControl(drawControl);
+
+          // --- GPS 아이콘 ---
+          const gpsIcon = L.divIcon({
+            className: 'gps-icon',
+            html: `
+      <div class="ship-icon">
+        <div class="gps-ring"></div>
+        <div class="gps-ring" style="animation-delay:1s"></div>
+        <div class="gps-direction"></div>
+        <div class="gps-outer">
+          <div class="gps-crosshair-v"></div>
+          <div class="gps-crosshair-h"></div>
+          <div class="gps-inner"></div>
+        </div>
+      </div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15], // 중심 정렬
+          });
+
+          L.marker([64.6, -54], { icon: gpsIcon }).addTo(map);
+
+          // --- 연구지점 A ---
+          const markerA = L.divIcon({
+            className: 'custom-marker',
+            html: `
+      <div class="marker">
+        <div class="marker-pin"><div class="marker-inner"></div></div>
+        <div class="marker-label">연구지점 A</div>
+        <div class="marker-distance">45 km | 2h 15m</div>
+      </div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+          });
+
+          L.marker([64.6, -57], { icon: markerA }).addTo(map);
+
+          // --- 연구지점 B ---
+          const markerB = L.divIcon({
+            className: 'custom-marker',
+            html: `
+      <div class="marker">
+        <div class="marker-pin"><div class="marker-inner"></div></div>
+        <div class="marker-label">연구지점 B</div>
+        <div class="marker-distance">78 km | 4h 30m</div>
+      </div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+          });
+
+          L.marker([65.3, -38], { icon: markerB }).addTo(map);
+
+          window.leafletMap = map;
+          window.drawnItems = drawnItems;
+          window.drawControl = drawControl;
+        }, []);
+
+        useEffect(() => {
+          if (!window.leafletMap || !window.drawnItems) return;
+
+          const map = window.leafletMap;
+          const drawnItems = window.drawnItems;
+
+          let drawHandler = null;
+
+          switch (drawType) {
+            case 'line':
+              drawHandler = new L.Draw.Polyline(map);
+              break;
+            case 'polygon':
+              drawHandler = new L.Draw.Polygon(map);
+              break;
+            case 'rectangle':
+              drawHandler = new L.Draw.Rectangle(map);
+              break;
+            case 'circle':
+              drawHandler = new L.Draw.Circle(map);
+              break;
+            default:
+              break;
+          }
+
+          if (drawHandler) {
+            drawHandler.enable();
+
+            // --- 도형이 완성되었을 때 이벤트 ---
+            map.once(L.Draw.Event.CREATED, (e) => {
+              const layer = e.layer;
+
+              // --- 면적 또는 거리 계산 ---
+              let infoText = '';
+              if (e.layerType === 'polyline') {
+                const latlngs = layer.getLatLngs();
+                let length = 0;
+                for (let i = 0; i < latlngs.length - 1; i++) {
+                  length += latlngs[i].distanceTo(latlngs[i + 1]);
+                }
+                layer._measureType = 'distance';
+                layer._measureValue = length; // ✅ 원본(m)
+                const converted = convertUnit(length, selectedUnit);
+                infoText = `거리: ${converted.value.toFixed(2)} ${converted.unit}`;
+              } else if (e.layerType === 'polygon' || e.layerType === 'rectangle') {
+                const latlngs = layer.getLatLngs()[0];
+                const area = L.GeometryUtil.geodesicArea(latlngs);
+                layer._measureType = 'area';
+                layer._measureValue = area; // ✅ 원본(m²)
+                const converted = convertArea(area, selectedUnit);
+                infoText = `면적: ${converted.value.toFixed(2)} ${converted.unit}²`;
+              } else if (e.layerType === 'circle') {
+                const radius = layer.getRadius();
+                const area = Math.PI * radius * radius;
+                layer._measureType = 'area';
+                layer._measureValue = area; // ✅ 원본(m²)
+                const converted = convertArea(area, selectedUnit);
+                infoText = `면적: ${converted.value.toFixed(2)} ${converted.unit}²`;
+              }
+
+              // --- 팝업으로 표시 ---
+              if (infoText) {
+                layer.bindPopup(infoText).openPopup();
+              }
+
+              // ✅ 여기에 선언 및 push
+              window.measureLayers = window.measureLayers || [];
+              window.measureLayers.push(layer);
+
+              // --- 클릭 시 삭제 이벤트 추가 ---
+              layer.on('click', () => {
+                if (confirm('이 도형을 삭제하시겠습니까?')) {
+                  drawnItems.removeLayer(layer);
+                }
+              });
+
+              // --- 지도에 추가 ---
+              drawnItems.addLayer(layer);
+              drawHandler.disable();
+              setDrawType(null);
+            });
+          }
+        }, [drawType]);
+
+        // --- 단위 변경 시 기존 팝업 내용 갱신 ---
+        useEffect(() => {
+          if (!window.measureLayers || window.measureLayers.length === 0) return;
+
+          window.measureLayers.forEach((layer) => {
+            if (!layer._measureType || !layer.getPopup()) return;
+
+            let content = '';
+            if (layer._measureType === 'distance') {
+              const converted = convertUnit(layer._measureValue, selectedUnit);
+              content = `거리: ${converted.value.toFixed(2)} ${converted.unit}`;
+            } else if (layer._measureType === 'area') {
+              const converted = convertArea(layer._measureValue, selectedUnit);
+              content = `면적: ${converted.value.toFixed(2)} ${converted.unit}²`;
+            }
+
+            layer.setPopupContent(content);
+
+            // 팝업이 닫혀 있으면 다시 열기
+            if (!layer.isPopupOpen()) layer.openPopup();
+          });
+        }, [selectedUnit]);
+
+        // --- 거리/면적 단위 변환 함수 ---
+        const convertUnit = (meters, unit) => {
+          switch (unit) {
+            case 'km':
+              return { value: meters / 1000, unit: 'km' };
+            case 'mile':
+              return { value: meters / 1609.34, unit: 'mile' };
+            case 'nm':
+              return { value: meters / 1852, unit: 'nm' };
+            default:
+              return { value: meters, unit: 'm' };
+          }
+        };
+
+        const convertArea = (m2, unit) => {
+          switch (unit) {
+            case 'km':
+              return { value: m2 / 1_000_000, unit: 'km' };
+            case 'mile':
+              return { value: m2 / 2_589_988, unit: 'mile' };
+            case 'nm':
+              return { value: m2 / 3_429_904, unit: 'nm' };
+            default:
+              return { value: m2, unit: 'm' };
+          }
+        };
+
+        // --- 마커 추가 함수 ---
+        const addMarker = () => {
+          if (window.leafletMap) {
+            // 지도 중심 좌표 가져오기
+            const center = window.leafletMap.getCenter();
+
+            // 새 마커 객체 추가
+            const newMarker = {
+              id: Date.now(), // 고유 ID
+              lat: center.lat,
+              lng: center.lng,
+            };
+
+            setMarkers((prev) => [...prev, newMarker]);
+          }
+        };
+        useEffect(() => {
+          if (window.leafletMap) {
+            // 기존 마커 제거
+            if (window.customMarkers) {
+              window.customMarkers.forEach((m) => window.leafletMap.removeLayer(m));
+            }
+
+            // 새 마커 생성
+            const leafletMarkers = markers.map((m) => {
+              const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `
+          <div class="marker">
+            <div class="marker-pin"><div class="marker-inner"></div></div>
+          </div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+              });
+
+              // 📍 Leaflet 마커 생성
+              const marker = L.marker([m.lat, m.lng], { icon }).addTo(window.leafletMap);
+
+              // ✅ 클릭 시 삭제 기능
+              marker.on('click', () => {
+                setMarkers((prev) => prev.filter((p) => p.id !== m.id));
+                window.leafletMap.removeLayer(marker);
+              });
+
+              return marker;
+            });
+
+            window.customMarkers = leafletMarkers;
+          }
+        }, [markers]);
+
+        useEffect(() => {
+          if (window.leafletMap && window.baseLayers) {
+            Object.values(window.baseLayers).forEach((layer) => window.leafletMap.removeLayer(layer));
+            window.baseLayers[baseMap].addTo(window.leafletMap);
+          }
+        }, [baseMap]);
+
+        useEffect(() => {
+          if (window.leafletMap) {
+            const trail = L.polyline(
+              [
+                [-75.56, 165.97],
+                [-75.6, 165.8],
+                [-75.62, 165.7],
+              ],
+              {
+                color: '#00d4ff',
+                dashArray: '10, 10',
+                weight: 3,
+              },
+            ).addTo(window.leafletMap);
+          }
+        }, [selectedView]);
+
+        useEffect(() => {
+          if (window.leafletMap) {
+            const trail = L.polyline(
+              [
+                [-75.56, 165.97],
+                [-75.6, 165.8],
+                [-75.62, 165.7],
+              ],
+              {
+                color: '#00d4ff',
+                dashArray: '10, 10',
+                weight: 3,
+              },
+            ).addTo(window.leafletMap);
+          }
+        }, [selectedView]);
+
+        const toggleToolPanel = (panelName) => {
+          if (activeToolPanel === panelName) {
+            setActiveToolPanel(null);
+          } else {
+            setActiveToolPanel(panelName);
+            setShowLayerControl(false);
+          }
+        };
+
+        const toggleLayerControl = () => {
+          const newState = !showLayerControl;
+          setShowLayerControl(newState);
+          if (newState) {
+            setActiveToolPanel(null);
+          }
+        };
+
+        const selectView = (view) => {
+          setSelectedView(view);
+          setActiveToolPanel(null);
+          setShowLayerControl(false);
+        };
+
+        // --- 지도 베이스맵 변경 useEffect ---
+        useEffect(() => {
+          if (!window.leafletMap) return;
+          const map = window.leafletMap;
+
+          // 기존 베이스맵 제거
+          if (window.currentBaseLayer) {
+            map.removeLayer(window.currentBaseLayer);
+          }
+
+          let newLayer;
+
+          switch (baseMap) {
+            case 'satellite':
+              newLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri — World Imagery',
+              });
+              break;
+
+            case 'osm':
+              newLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+              });
+              break;
+
+            case 'topo':
+              newLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: 'Map data: &copy; OpenTopoMap' });
+              break;
+
+            default:
+              newLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+          }
+
+          newLayer.addTo(map);
+          window.currentBaseLayer = newLayer;
+        }, [baseMap]);
+
+        const formatTime = (date, isUTC = false) => {
+          const d = isUTC ? new Date(date.toUTCString()) : date;
+          return d.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          });
+        };
+
+        const formatAntarcticaTime = (date) => {
+          // Antarctica time (UTC+12 - NZST)
+          const antarcticaTime = new Date(date.getTime() + 12 * 60 * 60 * 1000);
+          return antarcticaTime.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'UTC',
+          });
+        };
+
+        const zoomIn = () => leafletMap.zoomIn();
+        const zoomOut = () => leafletMap.zoomOut();
+
+        function moveToCenter() {
+          const map = window.leafletMap;
+          if (!map) return;
+          const bearing = typeof map.getBearing === 'function' ? map.getBearing() : 0;
+          map.setView([64, -47], 5, { animate: true });
+          if (typeof map.setBearing === 'function') map.setBearing(bearing);
+        }
+
+        function rotateMap(deltaDeg = 15) {
+          const map = window.leafletMap;
+          if (!map || typeof map.getBearing !== 'function' || typeof map.setBearing !== 'function') {
+            console.warn('[rotate] 플러그인이 없어 CSS 회전도, 좌표계 회전도 못 합니다.');
+            return;
+          }
+          const current = map.getBearing(); // 0 ~ 360 (플러그인 구현에 따라 음수일 수도 있음)
+          const next = (((current + deltaDeg) % 360) + 360) % 360; // 모듈러 정규화
+          map.setBearing(next);
+        }
+
+        async function toggleFullscreen(e) {
+          const map = window.leafletMap;
+          if (!map) return;
+          const el = map.getContainer();
+
+          const isShift = e?.shiftKey; // Shift 누른 상태로 클릭하면 브라우저 전체화면
+
+          try {
+            if (isShift) {
+              // 🔹 브라우저 전체화면 모드
+              if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+              } else {
+                await document.exitFullscreen();
+              }
+            } else {
+              // 🔹 지도 컨테이너 전체화면 모드
+              if (!document.fullscreenElement) {
+                await el.requestFullscreen();
+              } else if (document.fullscreenElement === el) {
+                await document.exitFullscreen();
+              }
+            }
+          } catch (err) {
+            console.error('Fullscreen toggle failed:', err);
+          }
+        }
+
+        async function captureMap() {
+          const el = window.leafletMap?.getContainer();
+          if (!el) return;
+          const canvas = await html2canvas(el, {
+            useCORS: true,
+            backgroundColor: null,
+            scale: window.devicePixelRatio || 1,
+          });
+          setCaptureDataUrl(canvas.toDataURL('image/png'));
+          setShowCaptureModal(true);
+        }
+
+        function printMap() {
+          const el = window.leafletMap?.getContainer();
+          if (!el) return;
+          const w = window.open('', '_blank');
+          w.document.write(`
+    <html><head>
+      <title>Map Print</title>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+      <style>html,body{margin:0} .leaflet-container{width:100vw;height:100vh}</style>
+    </head>
+    <body>${el.outerHTML}</body></html>
+  `);
+          w.document.close();
+          setTimeout(() => w.print(), 300);
+        }
+
+        useEffect(() => {
+          if (!window.leafletMap) return;
+          const map = window.leafletMap;
+
+          // 기존 데이터 레이어 제거
+          if (window.dataOverlayGroup) {
+            map.removeLayer(window.dataOverlayGroup);
+          }
+
+          const overlayGroup = L.layerGroup();
+
+          // 표층수온 (temperature) - OpenWeatherMap 해수면 온도
+          if (activeLayers.temperature) {
+            const sstLayer = L.tileLayer(
+              'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg',
+              {
+                layer: 'MODIS_Terra_CorrectedReflectance_TrueColor',
+                tileMatrixSet: '250m',
+                time: '',
+                tileSize: 512,
+                opacity: 0.7,
+                attribution: 'MODIS Terra TrueColor © NASA GIBS',
+              },
+            );
+            sstLayer.addTo(overlayGroup);
+          }
+
+          // 염분 -> 해빙 밀도 (salinity 체크박스 사용)
+          if (activeLayers.salinity) {
+            const seaIceLayer = L.tileLayer.wms('https://nsidc.org/api/mapservices/NSIDC/wms?', {
+              layers: 'NSIDC:nsidc_0051_raster_n', // 북반구 해빙 밀도
+              format: 'image/png',
+              transparent: true,
+              opacity: 0.6,
+              attribution: 'Sea Ice © NSIDC',
+            });
+            seaIceLayer.addTo(overlayGroup);
+          }
+
+          // 수심 (depth) - GEBCO 해저 지형도
+          if (activeLayers.depth) {
+            const depthLayer = L.tileLayer.provider('Esri.OceanBasemap', {
+              opacity: 0.6,
+              attribution: 'Bathymetry © Esri, GEBCO, NOAA, DeLorme, and others',
+            });
+            depthLayer.addTo(overlayGroup);
+          }
+
+          // [이동] 항해궤적 (trail)
+          if (activeLayers.trail) {
+            // --- 1.1에서 이동해 온 궤적 생성 로직 ---
+
+            // 현재 GPS 위치 (도착지)
+            const gpsPosition = [64.6, -54.0];
+
+            // GPS 아이콘 이전의 경로 (운항 궤적)
+            const gpsTrail = [
+              [64.0, -55.5],
+              [64.1, -55.2],
+              [64.25, -54.9],
+              [64.35, -54.6],
+              [64.45, -54.3],
+              [64.55, -54.15],
+              [64.6, -54.0], // 도착지 (gps marker 위치)
+            ];
+
+            // 그룹 생성
+            const trailGroup = L.layerGroup();
+
+            // --- 점선 경로 (운항선) ---
+            const trailLine = L.polyline(gpsTrail, {
+              color: '#00d4ff',
+              weight: 3,
+              dashArray: '10, 8',
+              opacity: 0.8,
+            }).addTo(trailGroup);
+
+            // --- 각 지점 점 표시 (항적 점) ---
+            gpsTrail.forEach((coord, idx) => {
+              const dot = L.circleMarker(coord, {
+                radius: 4,
+                color: '#00d4ff',
+                fillColor: '#00d4ff',
+                fillOpacity: 1,
+                weight: 1.5,
+              })
+                .bindTooltip(`항적 ${idx + 1}`, { permanent: false })
+                .addTo(trailGroup);
+            });
+
+            // --- 시작점/도착점 표시 아이콘 ---
+            const startIcon = L.divIcon({
+              className: 'trail-start',
+              html: '<div style="width:12px;height:12px;background:#0ff;border-radius:50%;border:2px solid #fff"></div>',
+            });
+
+            const endIcon = L.divIcon({
+              className: 'trail-end',
+              html: '<div style="width:14px;height:14px;background:#ff4444;border-radius:50%;border:2px solid #fff"></div>',
+            });
+
+            const startMarker = L.marker(gpsTrail[0], { icon: startIcon }).addTo(trailGroup);
+            const endMarker = L.marker(gpsTrail[gpsTrail.length - 1], { icon: endIcon }).addTo(trailGroup);
+
+            // ❗ 맵이 아닌 'overlayGroup'에 추가합니다.
+            trailGroup.addTo(overlayGroup);
+
+            // window.trailLayerGroup은 더 이상 전역으로 관리할 필요가 없습니다.
+          }
+
+          // EEZ (배타적 경제수역)
+          if (activeLayers.eez) {
+            const eezPolygon = L.polygon(
+              [
+                [65, -60],
+                [63, -60],
+                [63, -50],
+                [65, -50],
+              ],
+              {
+                color: '#00ffaa',
+                weight: 2,
+                fillColor: '#00ffaa',
+                fillOpacity: 0.15,
+              },
+            ).bindTooltip('EEZ 경계');
+            eezPolygon.addTo(overlayGroup);
+          }
+
+          overlayGroup.addTo(map);
+          window.dataOverlayGroup = overlayGroup;
+        }, [activeLayers]);
+
+        const sensorData = [
+          {
+            name: 'CTD 센서',
+            status: 'active',
+            data: {
+              수온: '-1.8 °C',
+              염분: '34.2 PSU',
+              깊이: '245 m',
+              전기전도도: '28.5 mS/cm',
+              밀도: '1027.8 kg/m³',
+              음속: '1449 m/s',
+            },
+            graph: [20, 35, 45, 40, 55, 65, 60, 70, 75, 68, 72, 80],
+          },
+          {
+            name: '기상 관측',
+            status: 'active',
+            data: {
+              기온: '-15 °C',
+              풍속: '15 kts',
+              풍향: '225° (SW)',
+              기압: '1013 hPa',
+              습도: '72%',
+              강수량: '0 mm/h',
+              시정: '8 NM',
+              일사량: '245 W/m²',
+            },
+          },
+          {
+            name: '해양 환경',
+            status: 'active',
+            data: {
+              수온: '-1.8 °C',
+              파고: '2.5 m',
+              파주기: '8 sec',
+              파향: '240° (WSW)',
+              유속: '0.8 kts',
+              유향: '190° (S)',
+              빙농도: '35%',
+              빙두께: '0.8 m',
+            },
+          },
+          {
+            name: '해수 분석',
+            status: 'active',
+            data: {
+              pH: '8.1',
+              용존산소: '8.2 mg/L',
+              탁도: '2.4 NTU',
+              클로로필: '0.85 μg/L',
+              영양염: '정상 범위',
+              미세플라스틱: '검출됨',
+            },
+          },
+          {
+            name: '멀티빔 음향측심',
+            status: 'active',
+            data: {
+              수심: '2,450 m',
+              커버리지: '250 m',
+              해상도: '0.5 m',
+              해저유형: '퇴적물',
+              '데이터 품질': '우수',
+            },
+          },
+          {
+            name: '선박 운항',
+            status: 'active',
+            data: {
+              '엔진 RPM': '850 RPM',
+              '엔진 온도': '78 °C',
+              '연료 소비': '245 L/h',
+              '잔여 연료': '78%',
+              유압: '185 bar',
+              발전량: '2,450 kW',
+              배터리: '24.8 V',
+            },
+          },
+          {
+            name: 'GPS/항해장비',
+            status: 'active',
+            data: {
+              위도: '75°33\'59"S',
+              경도: '165°58\'41"E',
+              속도: '12.5 kts',
+              방향: '045°',
+              GPS: '정상',
+              Gyro: '정상',
+              Radar: '정상',
+              AIS: '정상',
+            },
+          },
+          {
+            name: '해류계',
+            status: 'active',
+            data: {
+              '표층 유속': '0.8 kts',
+              '표층 유향': '190° (S)',
+              '50m 유속': '0.6 kts',
+              '100m 유속': '0.4 kts',
+            },
+          },
+          {
+            name: '빙두께 측정기',
+            status: 'active',
+            data: {
+              빙두께: '0.8 m',
+              빙농도: '35%',
+              빙질: '1년생 빙',
+              '표면 거칠기': '중간',
+            },
+          },
+          {
+            name: '파랑계',
+            status: 'active',
+            data: {
+              유의파고: '2.5 m',
+              최대파고: '4.2 m',
+              파주기: '8 sec',
+              파향: '240° (WSW)',
+            },
+          },
+          {
+            name: '수중 카메라',
+            status: 'active',
+            data: {
+              해상도: '4K',
+              '녹화 상태': '진행 중',
+              조명: '켜짐',
+              '저장 공간': '78%',
+            },
+          },
+          {
+            name: '해저 퇴적물 채취기',
+            status: 'active',
+            data: {
+              상태: '대기',
+              '마지막 채취': '2시간 전',
+              '채취 깊이': '2,450 m',
+              '샘플 수': '3개',
+            },
+          },
+          {
+            name: '바람 세기와 방향',
+            status: 'active',
+            data: {
+              '절대 풍속': '15 kts',
+              '절대 풍향': '240° (WSW)',
+              '상대 풍속': '18.5 kts',
+              '상대 풍향': '225° (SW)',
+              돌풍: '21 kts',
+              '평균 풍속': '14.2 kts',
+            },
+          },
+          {
+            name: '선박 속도와 방향',
+            status: 'active',
+            data: {
+              '선속 (STW)': '12.5 kts',
+              '대지속도 (SOG)': '11.8 kts',
+              선수방향: '045° (NE)',
+              침로각: '043°',
+              표류각: '2°',
+              회두율: '0.5°/min',
+            },
+          },
+          {
+            name: 'GPS 및 선박 위치',
+            status: 'active',
+            data: {
+              위도: '75°33\'59"S',
+              경도: '165°58\'41"E',
+              속도: '12.5 kts',
+              방향: '045°',
+              고도: '5.2 m',
+              정확도: '±2.5m',
+            },
+          },
+          {
+            name: 'FLUORO Meter',
+            status: 'active',
+            data: {
+              '클로로필-a': '0.85 μg/L',
+              형광강도: '245 RFU',
+              탁도: '2.4 NTU',
+              수온보정: '적용됨',
+              측정깊이: '5 m',
+              '데이터 품질': '우수',
+            },
+          },
+          {
+            name: '기상 정보',
+            status: 'active',
+            data: {
+              기온: '-15 °C',
+              풍속: '15 kts',
+              풍향: '240° (WSW)',
+              기압: '1013 hPa',
+              습도: '65%',
+              시정: '8 NM',
+            },
+          },
+          {
+            name: 'PDR 장비',
+            status: 'active',
+            data: {
+              수심: '2,450 m',
+              주파수: '12 kHz',
+              펄스폭: '15 ms',
+              해저경도: '연질',
+              신호강도: '-42 dB',
+              측정정확도: '±0.5 m',
+            },
+          },
+          {
+            name: '멀티빔 장비',
+            status: 'active',
+            data: {
+              수심: '2,450 m',
+              커버리지: '250 m',
+              '빔 수': '256',
+              해상도: '0.5 m',
+              'Swath 각도': '120°',
+              데이터율: '10 Hz',
+            },
+          },
+          {
+            name: 'THERMOSALINO GRAPH',
+            status: 'active',
+            data: {
+              '표층 수온': '-1.8 °C',
+              '표층 염분': '34.2 PSU',
+              '수온 경도': '0.05 °C/m',
+              '염분 경도': '0.02 PSU/m',
+              '측정 깊이': '0-10 m',
+              샘플링율: '1 Hz',
+            },
+            graph: [45, 52, 48, 55, 60, 58, 62, 65, 70, 68, 72, 75],
+          },
+          {
+            name: 'MOTION SENSOR',
+            status: 'active',
+            data: {
+              Roll: '2.5°',
+              Pitch: '1.8°',
+              Yaw: '0.3°',
+              Heave: '0.45 m',
+              '가속도 X': '0.12 m/s²',
+              '가속도 Y': '0.08 m/s²',
+              '가속도 Z': '9.83 m/s²',
+            },
+          },
+          {
+            name: 'WINCH CONTROL SYSTEM',
+            status: 'active',
+            data: {
+              'CTD 깊이': '150 m',
+              'CTD 상태': '운용 중',
+              'DST 상태': '대기',
+              Draft: '5.2 m',
+              '케이블 장력': '850 kgf',
+              '윈치 속도': '0.5 m/s',
+            },
+          },
+          {
+            name: '해양환경 정보',
+            status: 'active',
+            data: {
+              수온: '-1.8 °C',
+              염분: '34.2 PSU',
+              파고: '2.5 m',
+              유속: '0.8 kts',
+              빙농도: '35%',
+              빙두께: '0.8 m',
+            },
+            graph: [45, 52, 48, 55, 60, 58, 62, 65, 70, 68, 72, 75, 78, 76, 80, 82, 85, 88, 84, 87, 90, 85, 82, 80],
+          },
+          {
+            name: '수심 및 해저 지형',
+            status: 'active',
+            data: {
+              수심: '2,450 m',
+              해저경사: '5.2°',
+              해저유형: '퇴적물',
+              해저온도: '2.1 °C',
+              해저거칠기: '중간',
+            },
+          },
+        ];
+
+        const equipment = [
+          { name: 'CTD 센서', status: 'active', value: '수온 -1.8°C, 염분 34.2 PSU' },
+          { name: '멀티빔 음향측심기', status: 'active', value: '수심 2,450m' },
+          { name: '기상 관측 장비', status: 'active', value: '기온 -15°C, 풍속 15kts' },
+          { name: '해수 샘플러', status: 'active', value: 'pH 8.1, DO 8.2mg/L' },
+          { name: '수중 카메라', status: 'active', value: '4K 녹화 중' },
+          { name: '해저 퇴적물 채취기', status: 'active', value: '대기' },
+          { name: '해류계', status: 'active', value: '유속 0.8kts' },
+          { name: '빙두께 측정기', status: 'active', value: '두께 0.8m' },
+          { name: 'GPS/항해장비', status: 'active', value: '정상' },
+          { name: '파랑계', status: 'active', value: '파고 2.5m' },
+          { name: '선박 센서', status: 'active', value: '엔진 850RPM' },
+          { name: '방사선 측정기', status: 'active', value: '245 W/m²' },
+        ];
+
+        return (
+          <div className="app-container">
+            {showNotification && (
+              <div className="modal-overlay" onClick={() => setShowNotification(false)}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-title">📢 시스템 공지사항</div>
+                  <div className="modal-content">
+                    <p>
+                      <strong>시스템 점검 안내</strong>
+                    </p>
+                    <p style={{ marginTop: '10px' }}>
+                      • 일시: 2025년 10월 25일 02:00 - 04:00
+                      <br />
+                      • 내용: 정기 서버 점검 및 데이터베이스 최적화
+                      <br />• 영향: 해당 시간 동안 시스템 이용 불가
+                    </p>
+                    <p style={{ marginTop: '15px', fontSize: '13px', opacity: '0.8' }}>문의사항은 시스템 관리자에게 연락 바랍니다.</p>
+                  </div>
+                  <div className="modal-buttons">
+                    <button className="btn btn-primary" onClick={() => setShowNotification(false)}>
+                      확인
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <header className="header">
+              <div className="header-left">
+                <div className="logo-section">
+                  <div className="logo">🧊</div>
+                  <div className="logo-text">
+                    <div className="logo-title">선박용 웹 GIS 모니터링 시스템</div>
+                    <div className="logo-subtitle">Shipborne Web GIS Monitoring System</div>
+                  </div>
+                </div>
+              </div>
+              <div className="header-right">
+                <div className="time-display">
+                  <div className="time-item">
+                    <div className="time-label">LOCAL</div>
+                    <div className="time-value">{formatTime(currentTime)}</div>
+                  </div>
+                  <div className="time-item">
+                    <div className="time-label">UTC</div>
+                    <div className="time-value">{formatAntarcticaTime(currentTime)}</div>
+                  </div>
+                </div>
+                <div
+                  className="user-info"
+                  onClick={() =>
+                    window.open('https://preeminent-chebakia-1f867d.netlify.app/dashboard?page=1&target=%EC%A0%84%EC%B2%B4', '_blank')
+                  }
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span>👤</span>
+                  <span>연구원</span>
+                </div>
+              </div>
+            </header>
+
+            {showCaptureModal && (
+              <div className="modal-overlay" onClick={() => setShowCaptureModal(false)}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-title">지도 캡처</div>
+                  <div className="modal-content">
+                    <img src={captureDataUrl} style={{ width: '100%' }} />
+                  </div>
+                  <div className="modal-buttons">
+                    <button className="btn btn-secondary" onClick={() => setShowCaptureModal(false)}>
+                      닫기
+                    </button>
+                    <a className="btn btn-primary" href={captureDataUrl} download={`map_capture_${Date.now()}.png`}>
+                      다운로드
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="main-content">
+              <aside className="sidebar">
+                <button
+                  className={`sidebar-btn ${selectedView === 'world' && !activeToolPanel && !showLayerControl ? 'active' : ''}`}
+                  onClick={() => selectView('world')}
+                  title="세계지도"
+                >
+                  🌍
+                  <div className="sidebar-label">세계지도</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${selectedView === 'arctic' && !activeToolPanel && !showLayerControl ? 'active' : ''}`}
+                  onClick={() => selectView('arctic')}
+                  title="북극지도"
+                >
+                  🧊
+                  <div className="sidebar-label">북극지도</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${selectedView === 'antarctic' && !activeToolPanel && !showLayerControl ? 'active' : ''}`}
+                  onClick={() => selectView('antarctic')}
+                  title="남극지도"
+                >
+                  🐧
+                  <div className="sidebar-label">남극지도</div>
+                </button>
+                <button className={`sidebar-btn ${showLayerControl ? 'active' : ''}`} onClick={toggleLayerControl} title="레이어 설정">
+                  📊
+                  <div className="sidebar-label">레이어설정</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeToolPanel === 'measure' ? 'active' : ''}`}
+                  onClick={() => toggleToolPanel('measure')}
+                  title="측정 도구"
+                >
+                  📏
+                  <div className="sidebar-label">측정도구</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeToolPanel === 'draw' ? 'active' : ''}`}
+                  onClick={() => toggleToolPanel('draw')}
+                  title="사용자 레이어"
+                >
+                  ✏️
+                  <div className="sidebar-label" style={{ marginTop: -4 }}>
+                    사용자
+                    <br />
+                    레이어
+                  </div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeToolPanel === 'file' ? 'active' : ''}`}
+                  onClick={() => toggleToolPanel('file')}
+                  title="파일 열기"
+                >
+                  📁
+                  <div className="sidebar-label">파일열기</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeToolPanel === 'settings' ? 'active' : ''}`}
+                  onClick={() => toggleToolPanel('settings')}
+                  title="설정"
+                >
+                  ⚙️
+                  <div className="sidebar-label">설정</div>
+                </button>
+              </aside>
+
+              <div className="map-container">
+                <div className="map-canvas">
+                  {/* World Map Base */}
+                  <div className="world-map-base">
+                    {/* Continents */}
+                    <div className="continents">
+                      <div id="map" style={{ width: '100%', height: '100%', zIndex: 0 }}></div>
+                    </div>
+
+                    {/* Latitude Lines */}
+                    <div className="latitude-lines">
+                      <div className="lat-line" style={{ top: '20%' }}></div>
+                      <div className="lat-line" style={{ top: '40%' }}></div>
+                      <div className="lat-line" style={{ top: '50%' }}></div>
+                      <div className="lat-line" style={{ top: '60%' }}></div>
+                      <div className="lat-line" style={{ top: '80%' }}></div>
+                    </div>
+
+                    {/* Longitude Lines */}
+                    <div className="longitude-lines">
+                      <div className="lon-line" style={{ left: '20%' }}></div>
+                      <div className="lon-line" style={{ left: '40%' }}></div>
+                      <div className="lon-line" style={{ left: '50%' }}></div>
+                      <div className="lon-line" style={{ left: '60%' }}></div>
+                      <div className="lon-line" style={{ left: '80%' }}></div>
+                    </div>
+                  </div>
+
+                  <div className="map-grid"></div>
+
+                  <div className="compass">
+                    <div className="compass-ring"></div>
+                    <div className="compass-inner">
+                      {/* Compass Rose Background */}
+                      <div className="compass-rose">
+                        {/* Major direction ticks */}
+                        <div
+                          className="compass-tick compass-tick-major"
+                          style={{
+                            top: '5px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-major"
+                          style={{
+                            bottom: '5px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-major"
+                          style={{
+                            left: '5px',
+                            top: '50%',
+                            transform: 'translateY(-50%) rotate(90deg)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-major"
+                          style={{
+                            right: '5px',
+                            top: '50%',
+                            transform: 'translateY(-50%) rotate(90deg)',
+                          }}
+                        ></div>
+
+                        {/* Minor direction ticks */}
+                        <div
+                          className="compass-tick compass-tick-minor"
+                          style={{
+                            top: '12px',
+                            left: '25%',
+                            transform: 'rotate(-45deg)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-minor"
+                          style={{
+                            top: '12px',
+                            right: '25%',
+                            transform: 'rotate(45deg)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-minor"
+                          style={{
+                            bottom: '12px',
+                            left: '25%',
+                            transform: 'rotate(45deg)',
+                          }}
+                        ></div>
+                        <div
+                          className="compass-tick compass-tick-minor"
+                          style={{
+                            bottom: '12px',
+                            right: '25%',
+                            transform: 'rotate(-45deg)',
+                          }}
+                        ></div>
+                      </div>
+
+                      {/* Direction Labels */}
+                      <div className="compass-labels">
+                        <div
+                          className="compass-label"
+                          style={{
+                            top: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                          }}
+                        >
+                          N
+                        </div>
+                        <div
+                          className="compass-label"
+                          style={{
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            fontSize: '12px',
+                          }}
+                        >
+                          E
+                        </div>
+                        <div
+                          className="compass-label"
+                          style={{
+                            bottom: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            fontSize: '12px',
+                          }}
+                        >
+                          S
+                        </div>
+                        <div
+                          className="compass-label"
+                          style={{
+                            left: '11px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            fontSize: '12px',
+                          }}
+                        >
+                          W
+                        </div>
+                      </div>
+
+                      {/* Compass Needle - fixed pointing North */}
+                      <div className="compass-needle">
+                        <div className="compass-needle-north"></div>
+                        <div className="compass-needle-south"></div>
+                      </div>
+
+                      {/* Center Pivot Point */}
+                      <div className="compass-center"></div>
+                    </div>
+                  </div>
+
+                  {/* Measurement Tool Panel */}
+                  {activeToolPanel === 'measure' && (
+                    <div className="sub-tool-panel">
+                      <div className="sub-tool-header">
+                        <div className="sub-tool-title">📏 측정 도구</div>
+                        <button className="close-btn" onClick={() => setActiveToolPanel(null)}>
+                          ✕
+                        </button>
+                      </div>
+                      <div className="tool-grid">
+                        <div
+                          className={`tool-btn ${activeMeasureTool === 'distance' ? 'active' : ''}`}
+                          onClick={() => setActiveMeasureTool('distance')}
+                        >
+                          <div className="tool-icon">📐</div>
+                          <div className="tool-name">거리 측정</div>
+                        </div>
+                        <div
+                          className={`tool-btn ${activeMeasureTool === 'area' ? 'active' : ''}`}
+                          onClick={() => setActiveMeasureTool('area')}
+                        >
+                          <div className="tool-icon">⬛</div>
+                          <div className="tool-name">면적 측정</div>
+                        </div>
+                      </div>
+                      <div className="tool-divider"></div>
+                      <div style={{ marginBottom: '10px', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>측정 단위</div>
+                      <div className="unit-selector">
+                        <button className={`unit-btn ${selectedUnit === 'km' ? 'active' : ''}`} onClick={() => setSelectedUnit('km')}>
+                          km
+                        </button>
+                        <button className={`unit-btn ${selectedUnit === 'mile' ? 'active' : ''}`} onClick={() => setSelectedUnit('mile')}>
+                          mile
+                        </button>
+                        <button className={`unit-btn ${selectedUnit === 'nm' ? 'active' : ''}`} onClick={() => setSelectedUnit('nm')}>
+                          nautical mile
+                        </button>
+                        <button className={`unit-btn ${selectedUnit === 'm' ? 'active' : ''}`} onClick={() => setSelectedUnit('m')}>
+                          m
+                        </button>
+                      </div>
+                      <div className="tool-divider"></div>
+                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.5' }}>
+                        💡 지도를 클릭하여 측정 시작
+                        <br />
+                        더블클릭으로 측정 완료
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Drawing Tool Panel */}
+                  {activeToolPanel === 'draw' && (
+                    <div className="sub-tool-panel">
+                      <div className="sub-tool-header">
+                        <div className="sub-tool-title">✏️ 사용자 레이어</div>
+                        <button className="close-btn" onClick={() => setActiveToolPanel(null)}>
+                          ✕
+                        </button>
+                      </div>
+                      <div className="tool-grid">
+                        <div className="tool-btn" onClick={addMarker}>
+                          <div className="tool-icon">📍</div>
+                          <div className="tool-name">마커</div>
+                        </div>
+                        <div className="tool-btn">
+                          <div className="tool-icon">📊</div>
+                          <div className="tool-name">좌표값 입력</div>
+                        </div>
+                        <div className="tool-btn" onClick={() => handleDrawSelect('line')}>
+                          <div className="tool-icon">📏</div>
+                          <div className="tool-name">라인</div>
+                        </div>
+                        <div className="tool-btn" onClick={() => handleDrawSelect('polygon')}>
+                          <div className="tool-icon">⬟</div>
+                          <div className="tool-name">다각형</div>
+                        </div>
+                        <div className="tool-btn" onClick={() => handleDrawSelect('rectangle')}>
+                          <div className="tool-icon">▭</div>
+                          <div className="tool-name">사각형</div>
+                        </div>
+                        <div className="tool-btn" onClick={() => handleDrawSelect('circle')}>
+                          <div className="tool-icon">⭕</div>
+                          <div className="tool-name">원</div>
+                        </div>
+                      </div>
+                      <div className="tool-divider"></div>
+                      <div className="tool-list">
+                        <div className="tool-list-item">
+                          <span>💾</span>
+                          <span>레이어 저장</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>📂</span>
+                          <span>레이어 열기</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>✏️</span>
+                          <span>레이어 편집</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🗑️</span>
+                          <span>레이어 삭제</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File Open Panel */}
+                  {activeToolPanel === 'file' && (
+                    <div className="sub-tool-panel">
+                      <div className="sub-tool-header">
+                        <div className="sub-tool-title">📁 파일 열기</div>
+                        <button className="close-btn" onClick={() => setActiveToolPanel(null)}>
+                          ✕
+                        </button>
+                      </div>
+                      <div style={{ marginBottom: '15px', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>지원 파일 형식</div>
+                      <div className="tool-list">
+                        <div className="tool-list-item">
+                          <span>🗺️</span>
+                          <span>KML 파일</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🗺️</span>
+                          <span>KMZ 파일</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🗺️</span>
+                          <span>Shapefile (.shp)</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🖼️</span>
+                          <span>GeoTIFF (.tif)</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>📋</span>
+                          <span>CSV 파일</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>📊</span>
+                          <span>NetCDF</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>📊</span>
+                          <span>HDF5</span>
+                        </div>
+                      </div>
+                      <div className="tool-divider"></div>
+                      <div
+                        style={{
+                          padding: '20px',
+                          border: '2px dashed rgba(0, 212, 255, 0.3)',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          color: 'rgba(255,255,255,0.6)',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        📂 파일을 드래그하거나 클릭하여 업로드
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Settings Panel */}
+                  {activeToolPanel === 'settings' && (
+                    <div className="sub-tool-panel">
+                      <div className="sub-tool-header">
+                        <div className="sub-tool-title">⚙️ 설정</div>
+                        <button className="close-btn" onClick={() => setActiveToolPanel(null)}>
+                          ✕
+                        </button>
+                      </div>
+                      <div className="tool-list">
+                        <div className="tool-list-item">
+                          <span>🌐</span>
+                          <span>좌표계 변경</span>
+                        </div>
+                        <div className="tool-list-item basemap-item">
+                          <span className="tool-button" onClick={() => setShowBasemapPanel(!showBasemapPanel)}>
+                            🗺️ 지도 베이스맵 선택
+                          </span>
+
+                          {/* 버튼 아래쪽에 패널 표시 */}
+                          {showBasemapPanel && (
+                            <div className="sub-tool-panel basemap-panel">
+                              <label style={{ display: 'block', marginBottom: 6 }}>
+                                <input
+                                  type="radio"
+                                  name="basemap"
+                                  value="satellite"
+                                  checked={baseMap === 'satellite'}
+                                  onChange={(e) => setBaseMap(e.target.value)}
+                                />{' '}
+                                위성 (ESRI World Imagery)
+                              </label>
+                              <label style={{ display: 'block', marginBottom: 6 }}>
+                                <input
+                                  type="radio"
+                                  name="basemap"
+                                  value="osm"
+                                  checked={baseMap === 'osm'}
+                                  onChange={(e) => setBaseMap(e.target.value)}
+                                />{' '}
+                                기본 (OpenStreetMap)
+                              </label>
+                              <label style={{ display: 'block' }}>
+                                <input
+                                  type="radio"
+                                  name="basemap"
+                                  value="topo"
+                                  checked={baseMap === 'topo'}
+                                  onChange={(e) => setBaseMap(e.target.value)}
+                                />{' '}
+                                지형 (OpenTopoMap)
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🎨</span>
+                          <span>색상 테마</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>📐</span>
+                          <span>그리드 설정</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🌍</span>
+                          <span>언어 변경 (한/영)</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>🔔</span>
+                          <span>알림 설정</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>⚓</span>
+                          <span>선박 중심 고정</span>
+                        </div>
+                        <div className="tool-list-item">
+                          <span>💾</span>
+                          <span>설정 저장/복원</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Layer Control - moved to left side to avoid overlap */}
+                  {showLayerControl && (
+                    <div style={{ position: 'absolute', top: '10px', left: '14px' }}>
+                      <div className="layer-control">
+                        <div
+                          style={{
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            marginBottom: '15px',
+                            color: '#00d4ff',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <span>📊 데이터 레이어</span>
+                          <button className="close-btn" onClick={() => setShowLayerControl(false)}>
+                            ✕
+                          </button>
+                        </div>
+                        {Object.entries(activeLayers).map(([key, value]) => (
+                          <div key={key} className="layer-item" onClick={() => setActiveLayers({ ...activeLayers, [key]: !value })}>
+                            <div className="checkbox">{value && '✓'}</div>
+                            <div className="layer-name">
+                              {key === 'temperature' && '표층수온'}
+                              {key === 'salinity' && '염분'}
+                              {key === 'depth' && '수심'}
+                              {key === 'trail' && '항해궤적'}
+                              {key === 'eez' && 'EEZ'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="map-controls">
+                    <button className="control-btn" onClick={zoomIn} title="확대">
+                      +
+                    </button>
+                    <button className="control-btn" onClick={zoomOut} title="축소">
+                      -
+                    </button>
+                    <button className="control-btn" onClick={() => rotateMap(15)} title="회전">
+                      ↻
+                    </button>
+                    <button className="control-btn" onClick={moveToCenter} title="중심이동">
+                      ⊙
+                    </button>
+                    <button className="control-btn" title="3D">
+                      🌐
+                    </button>
+                    <button className="control-btn" onClick={toggleFullscreen} title="전체화면 (Shift+클릭 시 브라우저 전체화면)">
+                      ⛶
+                    </button>
+                    <button className="control-btn" onClick={captureMap} title="이미지 저장">
+                      ⎙
+                    </button>
+                    <button className="control-btn" onClick={printMap} title="인쇄">
+                      🖨
+                    </button>
+                  </div>
+
+                  <div className="map-info">
+                    <div className="info-group">
+                      <div className="info-item">
+                        <div className="info-label">선박 속도</div>
+                        <div className="info-value">12.5 kts</div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">선박 방향</div>
+                        <div className="info-value">045°</div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">좌표계</div>
+                        <div className="info-value">WGS84</div>
+                      </div>
+                    </div>
+
+                    <div className="info-divider"></div>
+
+                    <div className="info-item">
+                      <div className="info-label">현재 위치</div>
+                      <div className="info-value" style={{ fontSize: '13px' }}>
+                        37°33'59"N 126°58'41"E
+                      </div>
+                    </div>
+
+                    <div className="info-divider"></div>
+
+                    {/* Route Progress Section */}
+                    <div className="route-progress">
+                      <div className="progress-header">🎯 연구지점 A</div>
+                      <div className="progress-bar-container">
+                        <div className="progress-bar-fill" style={{ width: '35%' }}></div>
+                      </div>
+                      <div className="progress-stats">
+                        <div className="stat-item">
+                          <div className="stat-label">진행률:</div>
+                          <div className="stat-value">35%</div>
+                        </div>
+                        <div className="stat-item">
+                          <div className="stat-label">남은거리:</div>
+                          <div className="stat-value">45km</div>
+                        </div>
+                        <div className="stat-item">
+                          <div className="stat-label">도착예정:</div>
+                          <div className="stat-value">2h 15m</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sensor Visualization Overlay */}
+                  {selectedSensor && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        onClick={() => setSelectedSensor(null)}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'rgba(0, 0, 0, 0.7)',
+                          zIndex: 9998,
+                        }}
+                      ></div>
+
+                      {/* Sensor Details */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          background: 'rgba(10, 25, 41, 0.98)',
+                          border: '2px solid #00d4ff',
+                          borderRadius: '20px',
+                          padding: '30px',
+                          minWidth: '600px',
+                          maxWidth: '800px',
+                          maxHeight: '80vh',
+                          overflow: 'auto',
+                          boxShadow: '0 0 60px rgba(0, 212, 255, 0.6)',
+                          zIndex: 9999,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                          <h2 style={{ fontSize: '24px', color: '#00d4ff', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            📊 {selectedSensor.name} 상세 정보
+                          </h2>
+                          <button
+                            onClick={() => setSelectedSensor(null)}
+                            style={{
+                              background: 'rgba(255, 68, 68, 0.2)',
+                              border: '1px solid rgba(255, 68, 68, 0.5)',
+                              color: '#ff4444',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            ✕ 닫기
+                          </button>
+                        </div>
+
+                        {/* 해양환경 정보 시각화 */}
+                        {selectedSensor.name === '해양환경 정보' && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+                              {/* 수온 게이지 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>🌡️ 수온</div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#00ffaa' }}>-1.8°C</div>
+                                  <div
+                                    style={{
+                                      marginTop: '10px',
+                                      height: '10px',
+                                      background: 'linear-gradient(to right, #0066ff, #00ffaa, #ff6600)',
+                                      borderRadius: '5px',
+                                      position: 'relative',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        left: '35%',
+                                        top: '-5px',
+                                        width: '4px',
+                                        height: '20px',
+                                        background: '#fff',
+                                        borderRadius: '2px',
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      marginTop: '5px',
+                                      fontSize: '10px',
+                                      color: 'rgba(255, 255, 255, 0.5)',
+                                    }}
+                                  >
+                                    <span>-4°C</span>
+                                    <span>0°C</span>
+                                    <span>4°C</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 염분 게이지 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>🧂 염분</div>
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#00d4ff' }}>34.2 PSU</div>
+                                  <div
+                                    style={{
+                                      marginTop: '10px',
+                                      height: '10px',
+                                      background: 'linear-gradient(to right, #0066ff, #00d4ff, #00ffaa)',
+                                      borderRadius: '5px',
+                                      position: 'relative',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        left: '68%',
+                                        top: '-5px',
+                                        width: '4px',
+                                        height: '20px',
+                                        background: '#fff',
+                                        borderRadius: '2px',
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      marginTop: '5px',
+                                      fontSize: '10px',
+                                      color: 'rgba(255, 255, 255, 0.5)',
+                                    }}
+                                  >
+                                    <span>30</span>
+                                    <span>35</span>
+                                    <span>40</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 24시간 추이 그래프 */}
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                📈 24시간 추이
+                              </div>
+                              <div style={{ display: 'flex', height: '150px', alignItems: 'flex-end', gap: '8px', padding: '0 10px' }}>
+                                {[45, 52, 48, 55, 60, 58, 62, 65, 70, 68, 72, 75, 78, 76, 80, 82, 85, 88, 84, 87, 90, 85, 82, 80].map(
+                                  (height, i) => (
+                                    <div
+                                      key={i}
+                                      style={{
+                                        flex: 1,
+                                        height: `${height}%`,
+                                        background: i === 23 ? '#00d4ff' : 'rgba(0, 212, 255, 0.3)',
+                                        borderRadius: '4px 4px 0 0',
+                                        position: 'relative',
+                                        transition: 'all 0.3s',
+                                      }}
+                                    >
+                                      {i === 23 && (
+                                        <div
+                                          style={{
+                                            position: 'absolute',
+                                            top: '-25px',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            fontSize: '11px',
+                                            whiteSpace: 'nowrap',
+                                            color: '#00d4ff',
+                                            fontWeight: 'bold',
+                                          }}
+                                        >
+                                          현재
+                                        </div>
+                                      )}
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  marginTop: '10px',
+                                  fontSize: '10px',
+                                  color: 'rgba(255, 255, 255, 0.5)',
+                                }}
+                              >
+                                <span>00:00</span>
+                                <span>06:00</span>
+                                <span>12:00</span>
+                                <span>18:00</span>
+                                <span>24:00</span>
+                              </div>
+                            </div>
+
+                            {/* 추가 데이터 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '20px' }}>
+                              {Object.entries(selectedSensor.data)
+                                .slice(2)
+                                .map(([key, value]) => (
+                                  <div
+                                    key={key}
+                                    style={{
+                                      background: 'rgba(255, 255, 255, 0.05)',
+                                      padding: '15px',
+                                      borderRadius: '10px',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>{key}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{value}</div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 기상 정보 시각화 */}
+                        {selectedSensor.name === '기상 정보' && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                              {/* 풍향풍속계 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#00d4ff',
+                                    marginBottom: '15px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  🧭 풍향 및 풍속
+                                </div>
+                                <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto' }}>
+                                  {/* 나침반 배경 */}
+                                  <svg width="200" height="200" viewBox="0 0 200 200" style={{ position: 'absolute', top: 0, left: 0 }}>
+                                    <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(0, 212, 255, 0.2)" strokeWidth="2" />
+                                    <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(0, 212, 255, 0.1)" strokeWidth="1" />
+                                    <circle cx="100" cy="100" r="50" fill="none" stroke="rgba(0, 212, 255, 0.1)" strokeWidth="1" />
+                                    <line x1="100" y1="10" x2="100" y2="30" stroke="#00d4ff" strokeWidth="2" />
+                                    <text x="100" y="25" textAnchor="middle" fill="#00d4ff" fontSize="14" fontWeight="bold">
+                                      N
+                                    </text>
+                                    <line x1="190" y1="100" x2="170" y2="100" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="2" />
+                                    <text x="175" y="105" textAnchor="middle" fill="rgba(255, 255, 255, 0.5)" fontSize="12">
+                                      E
+                                    </text>
+                                    <line x1="100" y1="190" x2="100" y2="170" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="2" />
+                                    <text x="100" y="185" textAnchor="middle" fill="rgba(255, 255, 255, 0.5)" fontSize="12">
+                                      S
+                                    </text>
+                                    <line x1="10" y1="100" x2="30" y2="100" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="2" />
+                                    <text x="25" y="105" textAnchor="middle" fill="rgba(255, 255, 255, 0.5)" fontSize="12">
+                                      W
+                                    </text>
+                                    {/* 풍향 화살표 (240° = WSW) */}
+                                    <g transform="rotate(240 100 100)">
+                                      <line x1="100" y1="100" x2="100" y2="35" stroke="#00ff88" strokeWidth="4" strokeLinecap="round" />
+                                      <polygon points="100,25 95,40 100,35 105,40" fill="#00ff88" />
+                                    </g>
+                                  </svg>
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#00ff88' }}>240°</div>
+                                    <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>WSW</div>
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff' }}>15 kts</div>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>풍속</div>
+                                </div>
+                              </div>
+
+                              {/* 기온 및 기압 */}
+                              <div>
+                                <div
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    marginBottom: '15px',
+                                  }}
+                                >
+                                  <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '10px', fontWeight: 'bold' }}>
+                                    🌡️ 기온
+                                  </div>
+                                  <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#ff6600' }}>-15°C</div>
+                                </div>
+                                <div
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    marginBottom: '15px',
+                                  }}
+                                >
+                                  <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '10px', fontWeight: 'bold' }}>
+                                    📊 기압
+                                  </div>
+                                  <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#00d4ff' }}>1013 hPa</div>
+                                </div>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '15px', borderRadius: '12px' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '5px' }}>습도</div>
+                                  <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>65%</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* GPS 및 선박 위치 시각화 */}
+                        {selectedSensor.name === 'GPS 및 선박 위치' && (
+                          <div>
+                            <div
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                padding: '25px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                              }}
+                            >
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                                <div>
+                                  <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                    🌍 현재 위치
+                                  </div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ffaa', marginBottom: '10px' }}>
+                                    {selectedSensor.data['위도']}
+                                  </div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ffaa' }}>
+                                    {selectedSensor.data['경도']}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                    🚢 선박 정보
+                                  </div>
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>속도: </span>
+                                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{selectedSensor.data['속도']}</span>
+                                  </div>
+                                  <div>
+                                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>방향: </span>
+                                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{selectedSensor.data['방향']}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 항해 경로 미니맵 */}
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                🗺️ 최근 항해 경로
+                              </div>
+                              <div
+                                style={{
+                                  position: 'relative',
+                                  width: '100%',
+                                  height: '200px',
+                                  background: 'rgba(0, 0, 0, 0.3)',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {/* 그리드 */}
+                                <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+                                  {[...Array(10)].map((_, i) => (
+                                    <line
+                                      key={`h${i}`}
+                                      x1="0"
+                                      y1={i * 20}
+                                      x2="100%"
+                                      y2={i * 20}
+                                      stroke="rgba(255, 255, 255, 0.1)"
+                                      strokeWidth="1"
+                                    />
+                                  ))}
+                                  {[...Array(20)].map((_, i) => (
+                                    <line
+                                      key={`v${i}`}
+                                      x1={`${i * 5}%`}
+                                      y1="0"
+                                      x2={`${i * 5}%`}
+                                      y2="100%"
+                                      stroke="rgba(255, 255, 255, 0.1)"
+                                      strokeWidth="1"
+                                    />
+                                  ))}
+                                  {/* 항해 경로 */}
+                                  <path
+                                    d="M 50 180 Q 100 150, 150 140 T 300 100 Q 400 80, 500 60"
+                                    fill="none"
+                                    stroke="#00d4ff"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                  />
+                                  {/* 현재 위치 마커 */}
+                                  <circle cx="500" cy="60" r="8" fill="#00ff88" stroke="#fff" strokeWidth="2">
+                                    <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
+                                  </circle>
+                                </svg>
+                              </div>
+                            </div>
+
+                            {/* GPS 정확도 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '20px' }}>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>GPS 정확도</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ffaa' }}>±2.5m</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>위성 신호</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ffaa' }}>12개</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>고도</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{selectedSensor.data['고도']}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 수심 및 해저 지형 시각화 */}
+                        {selectedSensor.name === '수심 및 해저 지형' && (
+                          <div>
+                            <div
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                padding: '25px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                🌊 현재 수심
+                              </div>
+                              <div style={{ fontSize: '64px', fontWeight: 'bold', color: '#00d4ff' }}>2,450m</div>
+                            </div>
+
+                            {/* 수심 프로필 */}
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                📊 해저 지형 프로필
+                              </div>
+                              <div style={{ position: 'relative', width: '100%', height: '250px' }}>
+                                <svg width="100%" height="100%" viewBox="0 0 600 250">
+                                  {/* 해저 지형 */}
+                                  <defs>
+                                    <linearGradient id="depthGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                      <stop offset="0%" stopColor="#0066ff" stopOpacity="0.3" />
+                                      <stop offset="100%" stopColor="#0033aa" stopOpacity="0.8" />
+                                    </linearGradient>
+                                  </defs>
+                                  <path
+                                    d="M 0 50 L 100 80 L 200 120 L 300 180 L 400 160 L 500 200 L 600 190 L 600 250 L 0 250 Z"
+                                    fill="url(#depthGradient)"
+                                    stroke="#00d4ff"
+                                    strokeWidth="2"
+                                  />
+                                  {/* 수심 라벨 */}
+                                  <text x="10" y="60" fill="rgba(255, 255, 255, 0.6)" fontSize="12">
+                                    500m
+                                  </text>
+                                  <text x="10" y="110" fill="rgba(255, 255, 255, 0.6)" fontSize="12">
+                                    1000m
+                                  </text>
+                                  <text x="10" y="160" fill="rgba(255, 255, 255, 0.6)" fontSize="12">
+                                    1500m
+                                  </text>
+                                  <text x="10" y="210" fill="rgba(255, 255, 255, 0.6)" fontSize="12">
+                                    2000m
+                                  </text>
+                                  {/* 현재 위치 */}
+                                  <line x1="300" y1="0" x2="300" y2="180" stroke="#00ff88" strokeWidth="2" strokeDasharray="5,5" />
+                                  <circle cx="300" cy="180" r="6" fill="#00ff88" stroke="#fff" strokeWidth="2" />
+                                  <text x="305" y="15" fill="#00ff88" fontSize="14" fontWeight="bold">
+                                    현재 위치
+                                  </text>
+                                </svg>
+                              </div>
+                            </div>
+
+                            {/* 해저 정보 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '20px' }}>
+                              {Object.entries(selectedSensor.data)
+                                .slice(1)
+                                .map(([key, value]) => (
+                                  <div
+                                    key={key}
+                                    style={{
+                                      background: 'rgba(255, 255, 255, 0.05)',
+                                      padding: '15px',
+                                      borderRadius: '10px',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>{key}</div>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>{value}</div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 바람 세기와 방향 시각화 */}
+                        {selectedSensor.name === '바람 세기와 방향' && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                              {/* 절대 풍향풍속 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#00d4ff',
+                                    marginBottom: '15px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  🌬️ 절대 풍향풍속 (True Wind)
+                                </div>
+                                <div style={{ position: 'relative', width: '180px', height: '180px', margin: '0 auto' }}>
+                                  <svg width="180" height="180" viewBox="0 0 180 180">
+                                    <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(0, 212, 255, 0.2)" strokeWidth="2" />
+                                    <circle cx="90" cy="90" r="60" fill="none" stroke="rgba(0, 212, 255, 0.1)" strokeWidth="1" />
+                                    <circle cx="90" cy="90" r="40" fill="none" stroke="rgba(0, 212, 255, 0.1)" strokeWidth="1" />
+                                    <line x1="90" y1="15" x2="90" y2="30" stroke="#00d4ff" strokeWidth="2" />
+                                    <text x="90" y="25" textAnchor="middle" fill="#00d4ff" fontSize="12" fontWeight="bold">
+                                      N
+                                    </text>
+                                    <g transform="rotate(240 90 90)">
+                                      <line x1="90" y1="90" x2="90" y2="25" stroke="#00ff88" strokeWidth="4" />
+                                      <polygon points="90,20 86,30 90,27 94,30" fill="#00ff88" />
+                                    </g>
+                                  </svg>
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#00ff88' }}>15 kts</div>
+                                    <div style={{ fontSize: '18px', color: '#00d4ff' }}>240°</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 상대 풍향풍속 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#00d4ff',
+                                    marginBottom: '15px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  🌬️ 상대 풍향풍속 (Apparent Wind)
+                                </div>
+                                <div style={{ position: 'relative', width: '180px', height: '180px', margin: '0 auto' }}>
+                                  <svg width="180" height="180" viewBox="0 0 180 180">
+                                    <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255, 170, 0, 0.2)" strokeWidth="2" />
+                                    <circle cx="90" cy="90" r="60" fill="none" stroke="rgba(255, 170, 0, 0.1)" strokeWidth="1" />
+                                    <circle cx="90" cy="90" r="40" fill="none" stroke="rgba(255, 170, 0, 0.1)" strokeWidth="1" />
+                                    <line x1="90" y1="15" x2="90" y2="30" stroke="#ffaa00" strokeWidth="2" />
+                                    <text x="90" y="25" textAnchor="middle" fill="#ffaa00" fontSize="12" fontWeight="bold">
+                                      N
+                                    </text>
+                                    <g transform="rotate(225 90 90)">
+                                      <line x1="90" y1="90" x2="90" y2="25" stroke="#ffaa00" strokeWidth="4" />
+                                      <polygon points="90,20 86,30 90,27 94,30" fill="#ffaa00" />
+                                    </g>
+                                  </svg>
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#ffaa00' }}>18.5 kts</div>
+                                    <div style={{ fontSize: '18px', color: '#ffaa00' }}>225°</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 풍속 추이 */}
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                📈 풍속 변화 (최근 1시간)
+                              </div>
+                              <div style={{ display: 'flex', height: '150px', alignItems: 'flex-end', gap: '6px' }}>
+                                {[50, 55, 48, 60, 58, 65, 62, 70, 68, 75, 72, 78, 75, 82, 80, 85].map((height, i) => (
+                                  <div
+                                    key={i}
+                                    style={{
+                                      flex: 1,
+                                      height: `${height}%`,
+                                      background: i === 15 ? 'linear-gradient(to top, #00d4ff, #00ff88)' : 'rgba(0, 212, 255, 0.3)',
+                                      borderRadius: '4px 4px 0 0',
+                                    }}
+                                  ></div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 선박 속도와 방향 시각화 */}
+                        {selectedSensor.name === '선박 속도와 방향' && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                              {/* 선박 헤딩 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#00d4ff',
+                                    marginBottom: '15px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  🧭 선수 방향 (Heading)
+                                </div>
+                                <div style={{ position: 'relative', width: '180px', height: '180px', margin: '0 auto' }}>
+                                  <svg width="180" height="180" viewBox="0 0 180 180">
+                                    <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(0, 212, 255, 0.2)" strokeWidth="2" />
+                                    {/* 선박 아이콘 */}
+                                    <g transform="rotate(45 90 90)">
+                                      <path d="M 90 40 L 80 100 L 90 95 L 100 100 Z" fill="#00d4ff" stroke="#fff" strokeWidth="2" />
+                                    </g>
+                                    <line x1="90" y1="15" x2="90" y2="30" stroke="#00d4ff" strokeWidth="2" />
+                                    <text x="90" y="25" textAnchor="middle" fill="#00d4ff" fontSize="12" fontWeight="bold">
+                                      N
+                                    </text>
+                                  </svg>
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      top: '50%',
+                                      left: '50%',
+                                      transform: 'translate(-50%, -50%)',
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#00d4ff' }}>045°</div>
+                                    <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>NE</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 속도계 */}
+                              <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                <div
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#00d4ff',
+                                    marginBottom: '15px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                  }}
+                                >
+                                  ⚡ 선박 속도
+                                </div>
+                                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                                  <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#00ffaa' }}>12.5</div>
+                                  <div style={{ fontSize: '20px', color: 'rgba(255, 255, 255, 0.6)' }}>knots</div>
+                                  <div
+                                    style={{
+                                      marginTop: '20px',
+                                      height: '15px',
+                                      background: 'linear-gradient(to right, #0066ff, #00d4ff, #00ffaa)',
+                                      borderRadius: '8px',
+                                      position: 'relative',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        left: '62.5%',
+                                        top: '-8px',
+                                        width: '6px',
+                                        height: '31px',
+                                        background: '#fff',
+                                        borderRadius: '3px',
+                                        boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      marginTop: '8px',
+                                      fontSize: '11px',
+                                      color: 'rgba(255, 255, 255, 0.5)',
+                                    }}
+                                  >
+                                    <span>0</span>
+                                    <span>10</span>
+                                    <span>20 kts</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 추가 정보 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>
+                                  대지속도 (SOG)
+                                </div>
+                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#00d4ff' }}>11.8 kts</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>침로각</div>
+                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#00d4ff' }}>043°</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>표류각</div>
+                                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffaa00' }}>2°</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* FLUORO Meter 시각화 */}
+                        {selectedSensor.name === 'FLUORO Meter' && (
+                          <div>
+                            <div
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                padding: '25px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                                textAlign: 'center',
+                              }}
+                            >
+                              <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                🌿 클로로필-a 농도
+                              </div>
+                              <div style={{ fontSize: '56px', fontWeight: 'bold', color: '#00ffaa' }}>0.85</div>
+                              <div style={{ fontSize: '20px', color: 'rgba(255, 255, 255, 0.6)' }}>μg/L</div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                              {Object.entries(selectedSensor.data)
+                                .slice(1)
+                                .map(([key, value]) => (
+                                  <div key={key} style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '18px', borderRadius: '10px' }}>
+                                    <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>{key}</div>
+                                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{value}</div>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* MOTION SENSOR 시각화 */}
+                        {selectedSensor.name === 'MOTION SENSOR' && (
+                          <div>
+                            <div
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                padding: '20px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: '14px',
+                                  color: '#00d4ff',
+                                  marginBottom: '20px',
+                                  fontWeight: 'bold',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                📐 선박 자세 (Attitude)
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                                {/* Roll */}
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>
+                                    Roll (좌우 경사)
+                                  </div>
+                                  <div
+                                    style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto', marginBottom: '10px' }}
+                                  >
+                                    <svg width="80" height="80" viewBox="0 0 80 80">
+                                      <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(0, 212, 255, 0.2)" strokeWidth="2" />
+                                      <line x1="40" y1="40" x2="40" y2="10" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+                                      <g transform="rotate(2.5 40 40)">
+                                        <line x1="40" y1="40" x2="40" y2="10" stroke="#00d4ff" strokeWidth="3" strokeLinecap="round" />
+                                        <circle cx="40" cy="40" r="4" fill="#00d4ff" />
+                                      </g>
+                                    </svg>
+                                  </div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00d4ff' }}>2.5°</div>
+                                </div>
+
+                                {/* Pitch */}
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>
+                                    Pitch (전후 경사)
+                                  </div>
+                                  <div
+                                    style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto', marginBottom: '10px' }}
+                                  >
+                                    <svg width="80" height="80" viewBox="0 0 80 80">
+                                      <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(0, 255, 136, 0.2)" strokeWidth="2" />
+                                      <line x1="40" y1="40" x2="40" y2="10" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+                                      <g transform="rotate(1.8 40 40)">
+                                        <line x1="40" y1="40" x2="40" y2="10" stroke="#00ff88" strokeWidth="3" strokeLinecap="round" />
+                                        <circle cx="40" cy="40" r="4" fill="#00ff88" />
+                                      </g>
+                                    </svg>
+                                  </div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ff88' }}>1.8°</div>
+                                </div>
+
+                                {/* Yaw */}
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>
+                                    Yaw (선수 편향)
+                                  </div>
+                                  <div
+                                    style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto', marginBottom: '10px' }}
+                                  >
+                                    <svg width="80" height="80" viewBox="0 0 80 80">
+                                      <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255, 170, 0, 0.2)" strokeWidth="2" />
+                                      <line x1="40" y1="40" x2="40" y2="10" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1" />
+                                      <g transform="rotate(0.3 40 40)">
+                                        <line x1="40" y1="40" x2="40" y2="10" stroke="#ffaa00" strokeWidth="3" strokeLinecap="round" />
+                                        <circle cx="40" cy="40" r="4" fill="#ffaa00" />
+                                      </g>
+                                    </svg>
+                                  </div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffaa00' }}>0.3°</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Heave 및 가속도 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>Heave</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>0.45 m</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>Acc X</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00d4ff' }}>0.12 m/s²</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>Acc Y</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00d4ff' }}>0.08 m/s²</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '15px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>Acc Z</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>9.83 m/s²</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* WINCH CONTROL SYSTEM 시각화 */}
+                        {selectedSensor.name === 'WINCH CONTROL SYSTEM' && (
+                          <div>
+                            <div
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                padding: '25px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: '14px',
+                                  color: '#00d4ff',
+                                  marginBottom: '20px',
+                                  fontWeight: 'bold',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                🔧 CTD 윈치 상태
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '40px' }}>
+                                {/* 깊이 표시 */}
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>현재 깊이</div>
+                                  <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#00d4ff' }}>150m</div>
+                                  <div
+                                    style={{
+                                      marginTop: '15px',
+                                      width: '80px',
+                                      height: '200px',
+                                      background: 'rgba(0, 212, 255, 0.1)',
+                                      borderRadius: '10px',
+                                      border: '2px solid rgba(0, 212, 255, 0.3)',
+                                      position: 'relative',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        bottom: '0',
+                                        left: '0',
+                                        right: '0',
+                                        height: '30%',
+                                        background: 'linear-gradient(to top, #00d4ff, rgba(0, 212, 255, 0.5))',
+                                        borderRadius: '0 0 8px 8px',
+                                      }}
+                                    ></div>
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        bottom: '30%',
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        width: '20px',
+                                        height: '20px',
+                                        background: '#00ffaa',
+                                        borderRadius: '50%',
+                                        border: '3px solid #fff',
+                                        boxShadow: '0 0 15px rgba(0, 255, 136, 0.6)',
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          top: '50%',
+                                          left: '50%',
+                                          transform: 'translate(-50%, -50%)',
+                                          width: '8px',
+                                          height: '8px',
+                                          background: '#fff',
+                                          borderRadius: '50%',
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginTop: '10px' }}>최대: 500m</div>
+                                </div>
+
+                                {/* 케이블 장력 */}
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>
+                                    케이블 장력
+                                  </div>
+                                  <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#00ff88' }}>850</div>
+                                  <div style={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.6)' }}>kgf</div>
+                                  <div
+                                    style={{
+                                      marginTop: '20px',
+                                      width: '120px',
+                                      height: '20px',
+                                      background: 'linear-gradient(to right, #00d4ff, #00ff88, #ffaa00)',
+                                      borderRadius: '10px',
+                                      position: 'relative',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        left: '70%',
+                                        top: '-5px',
+                                        width: '6px',
+                                        height: '30px',
+                                        background: '#fff',
+                                        borderRadius: '3px',
+                                        boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      marginTop: '8px',
+                                      fontSize: '10px',
+                                      color: 'rgba(255, 255, 255, 0.5)',
+                                      width: '120px',
+                                    }}
+                                  >
+                                    <span>0</span>
+                                    <span>500</span>
+                                    <span>1000</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 상태 정보 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '18px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>CTD 상태</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ffaa' }}>운용 중</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '18px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>윈치 속도</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00d4ff' }}>0.5 m/s</div>
+                              </div>
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '18px',
+                                  borderRadius: '10px',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '8px' }}>Draft</div>
+                                <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>5.2 m</div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 기본 센서 데이터 표시 (시각화가 없는 센서들) */}
+                        {![
+                          '해양환경 정보',
+                          '기상 정보',
+                          'GPS 및 선박 위치',
+                          '수심 및 해저 지형',
+                          '바람 세기와 방향',
+                          '선박 속도와 방향',
+                          'FLUORO Meter',
+                          'MOTION SENSOR',
+                          'WINCH CONTROL SYSTEM',
+                        ].includes(selectedSensor.name) && (
+                          <div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                              {Object.entries(selectedSensor.data).map(([key, value]) => (
+                                <div key={key} style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '20px', borderRadius: '12px' }}>
+                                  <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '10px' }}>{key}</div>
+                                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00d4ff' }}>{value}</div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* 그래프가 있는 경우 */}
+                            {selectedSensor.graph && (
+                              <div
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  padding: '20px',
+                                  borderRadius: '12px',
+                                  marginTop: '20px',
+                                }}
+                              >
+                                <div style={{ fontSize: '14px', color: '#00d4ff', marginBottom: '15px', fontWeight: 'bold' }}>
+                                  📈 시간별 추이
+                                </div>
+                                <div style={{ display: 'flex', height: '200px', alignItems: 'flex-end', gap: '5px' }}>
+                                  {selectedSensor.graph.map((height, i) => (
+                                    <div
+                                      key={i}
+                                      style={{
+                                        flex: 1,
+                                        height: `${height}%`,
+                                        background: `linear-gradient(to top, #00d4ff, #00ffaa)`,
+                                        borderRadius: '4px 4px 0 0',
+                                      }}
+                                    ></div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <aside className="right-panel">
+                <div className="tab-container">
+                  <button className={`tab-btn ${activeTab === 'monitoring' ? 'active' : ''}`} onClick={() => setActiveTab('monitoring')}>
+                    <span>
+                      실시간 <br /> 모니터링
+                    </span>
+                  </button>
+                  <button className={`tab-btn ${activeTab === 'equipment' ? 'active' : ''}`} onClick={() => setActiveTab('equipment')}>
+                    <span>
+                      장비 <br /> 상태
+                    </span>
+                  </button>
+                  <button className={`tab-btn ${activeTab === 'data' ? 'active' : ''}`} onClick={() => setActiveTab('data')}>
+                    <span>
+                      데이터 <br /> 수집
+                    </span>
+                  </button>
+                  <button className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
+                    <span>보고서</span>
+                  </button>
+                  <button className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
+                    <span>스케줄</span>
+                  </button>
+                </div>
+
+                <div className="panel-content">
+                  {activeTab === 'monitoring' && (
+                    <>
+                      <div className="sensor-group">
+                        <div className="group-title">📡 센서 데이터</div>
+                        {sensorData.map((sensor, idx) => (
+                          <div
+                            key={idx}
+                            className="sensor-card"
+                            onClick={() => setSelectedSensor(sensor)}
+                            style={{
+                              cursor: 'pointer',
+                              border: selectedSensor?.name === sensor.name ? '2px solid #00d4ff' : '1px solid rgba(255, 255, 255, 0.1)',
+                              boxShadow: selectedSensor?.name === sensor.name ? '0 0 20px rgba(0, 212, 255, 0.3)' : 'none',
+                              transform: selectedSensor?.name === sensor.name ? 'scale(1.02)' : 'scale(1)',
+                              transition: 'all 0.3s ease',
+                            }}
+                          >
+                            <div className="sensor-header">
+                              <div className="sensor-name">{sensor.name}</div>
+                              <div className={`sensor-status status-${sensor.status}`}></div>
+                            </div>
+                            <div className="sensor-data">
+                              {Object.entries(sensor.data).map(([key, value]) => (
+                                <div key={key} className="data-item">
+                                  <div className="data-label">{key}</div>
+                                  <div className="data-value">{value}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {sensor.graph && (
+                              <div className="mini-graph">
+                                {sensor.graph.map((height, i) => {
+                                  const barCount = sensor.graph.length;
+                                  const gap = 100 / barCount; // 전체 100% 기준으로 간격 자동 조정
+
+                                  return (
+                                    <div
+                                      key={i}
+                                      className="graph-bar"
+                                      style={{
+                                        left: `${i * gap}%`,
+                                        width: `${gap * 0.8}%`, // 막대 사이 여백 확보
+                                        height: `${height}%`,
+                                      }}
+                                    ></div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === 'equipment' && (
+                    <div className="sensor-group">
+                      <div className="group-title">🔧 주요 장비 상태</div>
+                      <div className="equipment-indicators">
+                        {equipment.map((item, idx) => (
+                          <div key={idx} className="indicator-card">
+                            <div
+                              className="indicator-icon"
+                              style={{
+                                background:
+                                  item.status === 'active'
+                                    ? 'rgba(0, 255, 136, 0.2)'
+                                    : item.status === 'warning'
+                                    ? 'rgba(255, 170, 0, 0.2)'
+                                    : 'rgba(255, 68, 68, 0.2)',
+                              }}
+                            >
+                              {item.status === 'active' ? '✓' : item.status === 'warning' ? '⚠' : '✕'}
+                            </div>
+                            <div className="indicator-name">{item.name}</div>
+                            <div className="indicator-value">{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          background: 'rgba(0, 212, 255, 0.1)',
+                          borderRadius: '10px',
+                          border: '1px solid rgba(0, 212, 255, 0.3)',
+                        }}
+                      >
+                        <div style={{ fontSize: '13px', marginBottom: '10px', color: '#00d4ff', fontWeight: 'bold' }}>
+                          💡 WCS (Winch Control System)
+                        </div>
+                        <div style={{ fontSize: '12px', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)' }}>
+                          • CTD: 운용 중 (150m 깊이)
+                          <br />
+                          • DST: 대기 상태
+                          <br />
+                          • Draft: 5.2m
+                          <br />• 케이블 장력: 정상
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'data' && (
+                    <div className="sensor-group">
+                      <div className="group-title">💾 데이터 수집 현황</div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>장비별 수집 통계</div>
+                        {[
+                          { name: 'CTD 센서', files: 342, size: '12.4 GB', params: '수온,염분,깊이' },
+                          { name: '멀티빔 음향측심기', files: 156, size: '18.7 GB', params: '수심,해저지형' },
+                          { name: '기상 관측 장비', files: 428, size: '3.2 GB', params: '기온,풍속,기압' },
+                          { name: '해수 샘플러', files: 89, size: '2.1 GB', params: 'pH,용존산소' },
+                          { name: '수중 카메라', files: 145, size: '8.3 GB', params: '4K영상' },
+                          { name: '해류계', files: 156, size: '4.2 GB', params: '유속,유향' },
+                        ].map((eq, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '10px',
+                              borderRadius: '6px',
+                              marginBottom: '8px',
+                            }}
+                          >
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>{eq.name}</div>
+                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '5px' }}>{eq.params}</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                              <span style={{ color: 'rgba(255,255,255,0.6)' }}>파일: {eq.files}개</span>
+                              <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{eq.size}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>총 수집 통계</div>
+                        <div className="sensor-data">
+                          <div className="data-item">
+                            <div className="data-label">총 파일 수</div>
+                            <div className="data-value">3,610개</div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">총 전송량</div>
+                            <div className="data-value">59.4 GB</div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">수신 성공률</div>
+                            <div className="data-value" style={{ color: '#00ffaa' }}>
+                              99.6%
+                            </div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">평균 응답시간</div>
+                            <div className="data-value">8ms</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>최근 수신 파일</div>
+                        {[
+                          { name: 'CTD_data_20251021_143522.csv', time: '14:35', size: '2.4 MB' },
+                          { name: 'multibeam_survey_20251021.dat', time: '14:30', size: '156 MB' },
+                          { name: 'meteorological_20251021.json', time: '14:00', size: '125 KB' },
+                          { name: 'water_analysis_20251021.xlsx', time: '13:30', size: '458 KB' },
+                        ].map((file, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '8px',
+                              borderRadius: '6px',
+                              marginBottom: '6px',
+                              fontSize: '11px',
+                            }}
+                          >
+                            <div style={{ fontWeight: 'bold', marginBottom: '3px' }}>{file.name}</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
+                              <span>{file.time}</span>
+                              <span>{file.size}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'reports' && (
+                    <div className="sensor-group">
+                      <div className="group-title">📊 보고서 관리</div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>일일 운영 보고서</div>
+                        <div style={{ fontSize: '12px', lineHeight: '1.6', color: 'rgba(255,255,255,0.7)' }}>
+                          • 항해 거리: 156 NM
+                          <br />
+                          • 운항 시간: 12.5시간
+                          <br />
+                          • 연료 소비: 3,062 L<br />
+                          • 데이터 수집: 245개 파일
+                          <br />• 장비 가동률: 98.5%
+                        </div>
+                      </div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>장비 사용 이력</div>
+                        {[
+                          { equipment: 'CTD 센서', time: '45h', user: '김연구' },
+                          { equipment: '멀티빔 음향측심기', time: '78h', user: '이해양' },
+                          { equipment: '해수 샘플러', time: '12h', user: '박바다' },
+                        ].map((item, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.03)',
+                              padding: '8px',
+                              borderRadius: '6px',
+                              marginBottom: '6px',
+                              fontSize: '11px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                              <span style={{ fontWeight: 'bold' }}>{item.equipment}</span>
+                              <span style={{ color: '#00d4ff' }}>{item.time}</span>
+                            </div>
+                            <div style={{ color: 'rgba(255,255,255,0.6)' }}>사용자: {item.user}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>소모품 사용 현황</div>
+                        <div className="sensor-data">
+                          <div className="data-item">
+                            <div className="data-label">CTD 센서 와이어</div>
+                            <div className="data-value" style={{ fontSize: '12px' }}>
+                              87%
+                            </div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">해수 필터</div>
+                            <div className="data-value" style={{ fontSize: '12px' }}>
+                              45%
+                            </div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">카메라 배터리</div>
+                            <div className="data-value" style={{ fontSize: '12px' }}>
+                              92%
+                            </div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">샘플 용기</div>
+                            <div className="data-value" style={{ fontSize: '12px' }}>
+                              156개
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'schedule' && (
+                    <div className="sensor-group">
+                      <div className="group-title">📅 항해 스케줄</div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>오늘의 연구 일정</div>
+                        <div style={{ fontSize: '12px', lineHeight: '1.8', color: 'rgba(255,255,255,0.8)' }}>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong>09:00</strong> - 연구지점 A 도착
+                            <br />
+                            <span style={{ marginLeft: '55px', color: 'rgba(255,255,255,0.6)' }}>CTD 관측 (0-500m)</span>
+                          </div>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong>12:00</strong> - 점심 및 이동
+                            <br />
+                          </div>
+                          <div style={{ marginBottom: '8px' }}>
+                            <strong>14:00</strong> - 연구지점 B 도착
+                            <br />
+                            <span style={{ marginLeft: '55px', color: 'rgba(255,255,255,0.6)' }}>멀티빔 탐사</span>
+                          </div>
+                          <div>
+                            <strong>18:00</strong> - 항해 종료 및 데이터 정리
+                          </div>
+                        </div>
+                      </div>
+                      <div className="sensor-card">
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px', color: '#00d4ff' }}>예상 항해 시간</div>
+                        <div className="sensor-data">
+                          <div className="data-item">
+                            <div className="data-label">현 위치 → 지점 A</div>
+                            <div className="data-value">2h 15m</div>
+                          </div>
+                          <div className="data-item">
+                            <div className="data-label">지점 A → 지점 B</div>
+                            <div className="data-value">1h 45m</div>
+                          </div>
+                        </div>
+                      </div>
+                      <button className="btn btn-primary" style={{ width: '100%', marginTop: '15px' }}>
+                        + 새 스케줄 등록
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </aside>
+            </div>
+
+            {/* Bottom Status Bar */}
+            <div className="bottom-status-bar">
+              <div style={{ display: 'flex', gap: '30px' }}>
+                <div className="status-item">
+                  <span className="status-icon">⛴️</span>
+                  <span className="status-text">선박:</span>
+                  <span className="status-value">아라온호</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">📡</span>
+                  <span className="status-text">위성 통신:</span>
+                  <span className="status-value">정상</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">💾</span>
+                  <span className="status-text">전송량:</span>
+                  <span className="status-value">59.4 GB</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">🔧</span>
+                  <span className="status-text">연구장비:</span>
+                  <span className="status-value">12대 가동</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">📊</span>
+                  <span className="status-text">수신 파일:</span>
+                  <span className="status-value">3,610개</span>
+                </div>
+              </div>
+              <div className="connection-indicator">
+                <div className="connection-dot"></div>
+                <div className="connection-text">실시간 연결 (UDP/TCP)</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+  </body>
+</html>

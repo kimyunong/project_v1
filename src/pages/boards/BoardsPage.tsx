@@ -57,7 +57,7 @@ export default function BoardsPage() {
         })();
     }, [page, pageSize, q, target]);
 
-    // 등록
+    // 공지 등록
     const submit = async () => {
         if (!form.title?.trim()) return alert('제목을 입력하세요');
 

@@ -11,12 +11,12 @@ export default function NoticeDetailPage() {
     const [data, setData] = useState<Notice | null>(null);
 
     useEffect(() => {
-        if (!Number.isFinite(nid)) {
+        if (!Number.isFinite(nid)) { // 숫자가 아니면 목록으로
             navigate("/boards", {replace: true});
             return;
         }
 
-        let mounted = true;
+        let mounted = true; // 언마운트 시 상태 업데이트 방지용
 
         (
             async () => {
@@ -25,9 +25,9 @@ export default function NoticeDetailPage() {
                     navigate("/boards", {replace: true});
                     return;
                 }
-                await increaseViews(nid);
+                await increaseViews(nid); // 조회수 증가
                 const latest = await getNotice(nid);
-                if (mounted) setData(latest ?? n);
+                if (mounted) setData(latest ?? n); // 증가 후 최신 데이터 반영
             })();
 
         return () => {

@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쇄빙연구선 통합 관리 시스템</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #1a2332 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background: rgba(13, 31, 51, 0.95);
+            border-right: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 20px 0;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            padding: 8px 20px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-left-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .nav-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-left-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .nav-text {
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .header {
+            background: rgba(13, 31, 51, 0.95);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #00d4ff, #00ffaa);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(0, 212, 255, 0.5);
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #00ffaa);
+            border: none;
+            color: #0a1929;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Content Card */
+        .content-card {
+            background: rgba(13, 31, 51, 0.95);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 18px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .search-select {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .data-table th {
+            padding: 15px;
+            text-align: left;
+            font-size: 13px;
+            color: #00d4ff;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        /* Badge */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background: rgba(0, 255, 170, 0.2);
+            color: #00ffaa;
+            border: 1px solid rgba(0, 255, 170, 0.3);
+        }
+
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .badge-danger {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .badge-info {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(13, 31, 51, 0.95);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            color: #00ffaa;
+        }
+
+        .stat-change.negative {
+            color: #ff4444;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: rgba(13, 31, 51, 0.98);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: #00d4ff;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 68, 68, 0.2);
+            border: 1px solid rgba(255, 68, 68, 0.5);
+            color: #ff4444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .page-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+        }
+
+        .page-btn.active {
+            background: rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        /* Equipment Status */
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .equipment-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-3px);
+            border-color: #00d4ff;
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .equipment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .equipment-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .equipment-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active {
+            background: #00ffaa;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+        }
+
+        .status-standby {
+            background: #ffc107;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+
+        .status-inactive {
+            background: #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .equipment-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .info-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* File Upload Area */
+        .file-upload {
+            border: 2px dashed rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [activeMenu, setActiveMenu] = useState('dashboard');
+            const [showModal, setShowModal] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [currentUser] = useState({
+                name: '김연구',
+                role: 'Chief Scientist',
+                avatar: '김'
+            });
+
+            // Sample data for bulletin board
+            const [notices, setNotices] = useState([
+                { id: 1, title: '2025년 남극 탐사 일정 안내', author: '관리자', date: '2025-10-20', views: 145, category: '공지' },
+                { id: 2, title: '장비 점검 일정 변경 공지', author: '관리자', date: '2025-10-19', views: 98, category: '공지' },
+                { id: 3, title: '안전 교육 자료 업데이트', author: '안전팀', date: '2025-10-18', views: 76, category: '자료' },
+                { id: 4, title: '연구장비 사용 지침서 v2.0', author: '장비팀', date: '2025-10-17', views: 134, category: '자료' },
+                { id: 5, title: '월간 운영 보고서 (9월)', author: '관리자', date: '2025-10-01', views: 203, category: '보고서' }
+            ]);
+
+            // Sample data for equipment
+            const [equipment, setEquipment] = useState([
+                { id: 1, name: 'CTD 센서', status: 'active', usage: 45, remaining: '235h', lastCheck: '2025-10-15' },
+                { id: 2, name: '멀티빔 음향측심기', status: 'active', usage: 78, remaining: '110h', lastCheck: '2025-10-14' },
+                { id: 3, name: '해수 샘플러', status: 'standby', usage: 12, remaining: '440h', lastCheck: '2025-10-16' },
+                { id: 4, name: '기상 관측 장비', status: 'active', usage: 92, remaining: '40h', lastCheck: '2025-10-20' },
+                { id: 5, name: '수중 카메라', status: 'standby', usage: 34, remaining: '330h', lastCheck: '2025-10-13' },
+                { id: 6, name: '해저 퇴적물 채취기', status: 'inactive', usage: 5, remaining: '0h', lastCheck: '2025-10-01' }
+            ]);
+
+            // Sample data for parts
+            const [parts, setParts] = useState([
+                { id: 1, name: 'CTD 센서 케이블', partNo: 'CTD-C-001', equipment: 'CTD 센서', type: 'SparePart', unitPrice: 350000, totalQty: 10, usedQty: 3, remainQty: 7, firstShipDate: '2024-05-15' },
+                { id: 2, name: '음향측심기 트랜스듀서', partNo: 'MB-T-002', equipment: '멀티빔 음향측심기', type: 'SparePart', unitPrice: 2800000, totalQty: 5, usedQty: 1, remainQty: 4, firstShipDate: '2024-06-20' },
+                { id: 3, name: '샘플러 밸브', partNo: 'WS-V-003', equipment: '해수 샘플러', type: 'Store', unitPrice: 120000, totalQty: 20, usedQty: 8, remainQty: 12, firstShipDate: '2024-07-10' },
+                { id: 4, name: '기상센서 필터', partNo: 'WS-F-004', equipment: '기상 관측 장비', type: 'Store', unitPrice: 85000, totalQty: 30, usedQty: 15, remainQty: 15, firstShipDate: '2024-08-01' },
+                { id: 5, name: '카메라 렌즈 보호캡', partNo: 'UC-L-005', equipment: '수중 카메라', type: 'Store', unitPrice: 45000, totalQty: 15, usedQty: 4, remainQty: 11, firstShipDate: '2024-09-05' }
+            ]);
+
+            // Sample data for inspection log
+            const [inspectionLogs, setInspectionLogs] = useState([
+                { id: 1, equipment: 'CTD 센서', startDate: '2025-10-15', institution: '극지연구소', user: '김연구', useStartDate: '2025-10-15', useEndDate: '2025-10-20', registrant: '이관리', purpose: '수온/염분 측정 연구' },
+                { id: 2, equipment: '멀티빔 음향측심기', startDate: '2025-10-10', institution: '해양대학교', user: '박해양', useStartDate: '2025-10-10', useEndDate: '2025-10-18', registrant: '최장비', purpose: '해저 지형 매핑' },
+                { id: 3, equipment: '해수 샘플러', startDate: '2025-10-12', institution: '기상청', user: '정바다', useStartDate: '2025-10-12', useEndDate: '2025-10-14', registrant: '강점검', purpose: '해수 성분 분석' },
+                { id: 4, equipment: '기상 관측 장비', startDate: '2025-10-08', institution: '극지연구소', user: '한기상', useStartDate: '2025-10-08', useEndDate: '2025-10-22', registrant: '신안전', purpose: '남극 기상 관측' }
+            ]);
+
+            // Sample data for operation log
+            const [operationLogs, setOperationLogs] = useState([
+                { id: 1, equipment: 'CTD 센서', startDate: '2025-10-15', endDate: '2025-10-20', useTime: '45h', activity: '수온, 염분, 수심 측정 - 남극해 A구역', actualUser: '김연구' },
+                { id: 2, equipment: '멀티빔 음향측심기', startDate: '2025-10-10', endDate: '2025-10-18', useTime: '78h', activity: '해저 지형 조사 및 매핑 작업', actualUser: '이해양' },
+                { id: 3, equipment: '해수 샘플러', startDate: '2025-10-12', endDate: '2025-10-14', useTime: '12h', activity: '표층 및 심층 해수 샘플 채취', actualUser: '박바다' },
+                { id: 4, equipment: '기상 관측 장비', startDate: '2025-10-08', endDate: '2025-10-22', useTime: '336h', activity: '기온, 기압, 풍속 연속 관측', actualUser: '최기상' },
+                { id: 5, equipment: '수중 카메라', startDate: '2025-10-16', endDate: '2025-10-19', useTime: '28h', activity: '해저 생물 촬영 및 기록', actualUser: '정영상' }
+            ]);
+
+            const stats = [
+                { label: '전체 장비', value: '24', change: '+2', icon: '⚙️', color: 'rgba(0, 212, 255, 0.2)' },
+                { label: '가동 중', value: '16', change: '+3', icon: '✅', color: 'rgba(0, 255, 170, 0.2)' },
+                { label: '대기 중', value: '6', change: '-1', icon: '⏸️', color: 'rgba(255, 193, 7, 0.2)' },
+                { label: '점검 필요', value: '2', change: '0', icon: '⚠️', color: 'rgba(255, 68, 68, 0.2)' }
+            ];
+
+            const renderDashboard = () => (
+                <>
+                    <div className="stats-grid">
+                        {stats.map((stat, idx) => (
+                            <div key={idx} className="stat-card">
+                                <div className="stat-icon" style={{ background: stat.color }}>
+                                    {stat.icon}
+                                </div>
+                                <div className="stat-label">{stat.label}</div>
+                                <div className="stat-value">{stat.value}</div>
+                                <div className={`stat-change ${stat.change.startsWith('+') ? 'positive' : 'negative'}`}>
+                                    {stat.change} 지난 주 대비
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="content-card">
+                        <div className="card-header">
+                            <div className="card-title">
+                                <span>📊</span>
+                                최근 공지사항
+                            </div>
+                            <button className="btn" onClick={() => setActiveMenu('notice')}>
+                                전체 보기 →
+                            </button>
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '60px' }}>번호</th>
+                                    <th>제목</th>
+                                    <th style={{ width: '100px' }}>작성자</th>
+                                    <th style={{ width: '120px' }}>등록일</th>
+                                    <th style={{ width: '80px' }}>조회수</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {notices.slice(0, 5).map(notice => (
+                                    <tr key={notice.id}>
+                                        <td>{notice.id}</td>
+                                        <td>
+                                            <span className={`badge badge-${notice.category === '공지' ? 'info' : 'success'}`}>
+                                                {notice.category}
+                                            </span> {notice.title}
+                                        </td>
+                                        <td>{notice.author}</td>
+                                        <td>{notice.date}</td>
+                                        <td>{notice.views}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="content-card">
+                        <div className="card-header">
+                            <div className="card-title">
+                                <span>🔧</span>
+                                장비 모니터링
+                            </div>
+                            <button className="btn" onClick={() => setActiveMenu('equipment')}>
+                                전체 보기 →
+                            </button>
+                        </div>
+                        <div className="equipment-grid">
+                            {equipment.slice(0, 6).map(eq => (
+                                <div key={eq.id} className="equipment-card">
+                                    <div className="equipment-header">
+                                        <div className="equipment-name">{eq.name}</div>
+                                        <div className={`equipment-status status-${eq.status}`}></div>
+                                    </div>
+                                    <div className="equipment-info">
+                                        <div className="info-row">
+                                            <span className="info-label">상태</span>
+                                            <span className="info-value">
+                                                {eq.status === 'active' ? '가동 중' : eq.status === 'standby' ? '대기' : '점검 필요'}
+                                            </span>
+                                        </div>
+                                        <div className="info-row">
+                                            <span className="info-label">사용률</span>
+                                            <span className="info-value">{eq.usage}%</span>
+                                        </div>
+                                        <div className="info-row">
+                                            <span className="info-label">잔여시간</span>
+                                            <span className="info-value">{eq.remaining}</span>
+                                        </div>
+                                        <div className="info-row">
+                                            <span className="info-label">최종점검</span>
+                                            <span className="info-value">{eq.lastCheck}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="content-card">
+                        <div className="card-header">
+                            <div className="card-title">
+                                <span>🔧</span>
+                                부속품 재고 현황
+                            </div>
+                            <button className="btn" onClick={() => setActiveMenu('parts')}>
+                                전체 보기 →
+                            </button>
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>부속품명</th>
+                                    <th>소유 장비</th>
+                                    <th>유형</th>
+                                    <th style={{ textAlign: 'center' }}>총수량</th>
+                                    <th style={{ textAlign: 'center' }}>잔여</th>
+                                    <th>상태</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {parts.slice(0, 5).map(part => (
+                                    <tr key={part.id}>
+                                        <td><strong>{part.name}</strong></td>
+                                        <td>{part.equipment}</td>
+                                        <td>
+                                            <span className={`badge badge-${part.type === 'SparePart' ? 'warning' : 'success'}`}>
+                                                {part.type}
+                                            </span>
+                                        </td>
+                                        <td style={{ textAlign: 'center' }}>{part.totalQty}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <span style={{ color: part.remainQty < 5 ? '#ff4444' : '#00ffaa', fontWeight: 'bold' }}>
+                                                {part.remainQty}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {part.remainQty < 5 ? (
+                                                <span className="badge badge-danger">재고 부족</span>
+                                            ) : part.remainQty < 10 ? (
+                                                <span className="badge badge-warning">재고 주의</span>
+                                            ) : (
+                                                <span className="badge badge-success">재고 충분</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            );
+
+            const renderNotice = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>📢</span>
+                            공지사항
+                        </div>
+                        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                            + 새 공지사항
+                        </button>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체</option>
+                            <option>제목</option>
+                            <option>내용</option>
+                            <option>작성자</option>
+                        </select>
+                        <input 
+                            type="text" 
+                            className="search-input" 
+                            placeholder="검색어를 입력하세요..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <button className="btn">🔍 검색</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>번호</th>
+                                <th>제목</th>
+                                <th style={{ width: '100px' }}>작성자</th>
+                                <th style={{ width: '120px' }}>등록일</th>
+                                <th style={{ width: '80px' }}>조회수</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {notices.map(notice => (
+                                <tr key={notice.id}>
+                                    <td>{notice.id}</td>
+                                    <td>
+                                        <span className={`badge badge-${notice.category === '공지' ? 'info' : notice.category === '자료' ? 'success' : 'warning'}`}>
+                                            {notice.category}
+                                        </span> {notice.title}
+                                    </td>
+                                    <td>{notice.author}</td>
+                                    <td>{notice.date}</td>
+                                    <td>{notice.views}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="pagination">
+                        <button className="page-btn">«</button>
+                        <button className="page-btn active">1</button>
+                        <button className="page-btn">2</button>
+                        <button className="page-btn">3</button>
+                        <button className="page-btn">»</button>
+                    </div>
+                </div>
+            );
+
+            const renderEquipment = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>⚙️</span>
+                            장비 관리
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="btn">📥 엑셀 다운로드</button>
+                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                + 장비 등록
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체 상태</option>
+                            <option>가동 중</option>
+                            <option>대기</option>
+                            <option>점검 필요</option>
+                        </select>
+                        <input 
+                            type="text" 
+                            className="search-input" 
+                            placeholder="장비명 검색..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <button className="btn">🔍 검색</button>
+                    </div>
+
+                    <div className="equipment-grid">
+                        {equipment.map(eq => (
+                            <div key={eq.id} className="equipment-card">
+                                <div className="equipment-header">
+                                    <div className="equipment-name">{eq.name}</div>
+                                    <div className={`equipment-status status-${eq.status}`}></div>
+                                </div>
+                                <div className="equipment-info">
+                                    <div className="info-row">
+                                        <span className="info-label">상태</span>
+                                        <span className="info-value">
+                                            <span className={`badge badge-${eq.status === 'active' ? 'success' : eq.status === 'standby' ? 'warning' : 'danger'}`}>
+                                                {eq.status === 'active' ? '가동 중' : eq.status === 'standby' ? '대기' : '점검 필요'}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">사용률</span>
+                                        <span className="info-value">{eq.usage}%</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">잔여시간</span>
+                                        <span className="info-value">{eq.remaining}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">최종점검</span>
+                                        <span className="info-value">{eq.lastCheck}</span>
+                                    </div>
+                                </div>
+                                <div style={{ marginTop: '15px', display: 'flex', gap: '8px' }}>
+                                    <button className="btn" style={{ flex: 1, padding: '8px' }}>상세</button>
+                                    <button className="btn" style={{ flex: 1, padding: '8px' }}>수정</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const renderReport = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>📋</span>
+                            장비 사용 보고서
+                        </div>
+                        <button className="btn">📥 엑셀 다운로드</button>
+                    </div>
+
+                    <div className="search-bar">
+                        <input type="date" className="search-input" />
+                        <span style={{ padding: '12px', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                        <input type="date" className="search-input" />
+                        <select className="search-select">
+                            <option>전체 장비</option>
+                            <option>CTD 센서</option>
+                            <option>멀티빔 음향측심기</option>
+                            <option>해수 샘플러</option>
+                        </select>
+                        <button className="btn">🔍 조회</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>장비명</th>
+                                <th>연구 시작일</th>
+                                <th>연구 종료일</th>
+                                <th>사용 시간</th>
+                                <th>실사용자</th>
+                                <th>활용 내역</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>CTD 센서</td>
+                                <td>2025-10-15</td>
+                                <td>2025-10-20</td>
+                                <td>45h</td>
+                                <td>김연구</td>
+                                <td>수온/염분 측정</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>멀티빔 음향측심기</td>
+                                <td>2025-10-10</td>
+                                <td>2025-10-18</td>
+                                <td>78h</td>
+                                <td>이해양</td>
+                                <td>해저 지형 조사</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>해수 샘플러</td>
+                                <td>2025-10-12</td>
+                                <td>2025-10-14</td>
+                                <td>12h</td>
+                                <td>박바다</td>
+                                <td>해수 샘플 채취</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            );
+
+            const renderDataLibrary = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>📁</span>
+                            취득정보 자료실
+                        </div>
+                        <button className="btn btn-primary">+ 자료 업로드</button>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체 장비</option>
+                            <option>CTD 센서</option>
+                            <option>멀티빔 음향측심기</option>
+                            <option>해수 샘플러</option>
+                        </select>
+                        <input type="date" className="search-input" placeholder="시작일" />
+                        <span style={{ padding: '12px', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                        <input type="date" className="search-input" placeholder="종료일" />
+                        <button className="btn">🔍 검색</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>장비명</th>
+                                <th>파일명</th>
+                                <th>데이터 기간</th>
+                                <th>파일 크기</th>
+                                <th>등록일</th>
+                                <th>다운로드</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>CTD 센서</td>
+                                <td>CTD_data_20251020.csv</td>
+                                <td>2025-10-15 ~ 2025-10-20</td>
+                                <td>2.4 MB</td>
+                                <td>2025-10-20</td>
+                                <td><button className="btn" style={{ padding: '6px 12px' }}>📥</button></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>멀티빔 음향측심기</td>
+                                <td>multibeam_survey_1018.dat</td>
+                                <td>2025-10-10 ~ 2025-10-18</td>
+                                <td>156 MB</td>
+                                <td>2025-10-18</td>
+                                <td><button className="btn" style={{ padding: '6px 12px' }}>📥</button></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>해수 샘플러</td>
+                                <td>water_sample_analysis.xlsx</td>
+                                <td>2025-10-12 ~ 2025-10-14</td>
+                                <td>845 KB</td>
+                                <td>2025-10-14</td>
+                                <td><button className="btn" style={{ padding: '6px 12px' }}>📥</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            );
+
+            const renderPartsManagement = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>🔧</span>
+                            부속품 관리
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="btn">📥 엑셀 다운로드</button>
+                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                + 부속품 등록
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체 유형</option>
+                            <option>SparePart</option>
+                            <option>Store</option>
+                        </select>
+                        <input type="date" className="search-input" placeholder="선적일 시작" />
+                        <span style={{ padding: '12px', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                        <input type="date" className="search-input" placeholder="선적일 종료" />
+                        <button className="btn">🔍 검색</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>번호</th>
+                                <th>부속품명</th>
+                                <th>파트번호</th>
+                                <th>소유 장비</th>
+                                <th>유형</th>
+                                <th style={{ textAlign: 'right' }}>단가</th>
+                                <th style={{ textAlign: 'center' }}>총수량</th>
+                                <th style={{ textAlign: 'center' }}>사용</th>
+                                <th style={{ textAlign: 'center' }}>잔여</th>
+                                <th>최초선적일</th>
+                                <th style={{ width: '100px' }}>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {parts.map(part => (
+                                <tr key={part.id}>
+                                    <td>{part.id}</td>
+                                    <td>{part.name}</td>
+                                    <td><span className="badge badge-info">{part.partNo}</span></td>
+                                    <td>{part.equipment}</td>
+                                    <td>
+                                        <span className={`badge badge-${part.type === 'SparePart' ? 'warning' : 'success'}`}>
+                                            {part.type}
+                                        </span>
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>₩{part.unitPrice.toLocaleString()}</td>
+                                    <td style={{ textAlign: 'center' }}>{part.totalQty}</td>
+                                    <td style={{ textAlign: 'center' }}>{part.usedQty}</td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <span style={{ color: part.remainQty < 5 ? '#ff4444' : '#00ffaa', fontWeight: 'bold' }}>
+                                            {part.remainQty}
+                                        </span>
+                                    </td>
+                                    <td>{part.firstShipDate}</td>
+                                    <td>
+                                        <button className="btn" style={{ padding: '6px 12px', fontSize: '12px' }}>상세</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="pagination">
+                        <button className="page-btn">«</button>
+                        <button className="page-btn active">1</button>
+                        <button className="page-btn">2</button>
+                        <button className="page-btn">»</button>
+                    </div>
+                </div>
+            );
+
+            const renderInspectionLog = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>📝</span>
+                            점검 일지
+                        </div>
+                        <button className="btn">📥 엑셀 다운로드</button>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체 장비</option>
+                            <option>CTD 센서</option>
+                            <option>멀티빔 음향측심기</option>
+                            <option>해수 샘플러</option>
+                            <option>기상 관측 장비</option>
+                        </select>
+                        <input type="date" className="search-input" placeholder="사용 시작일" />
+                        <span style={{ padding: '12px', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                        <input type="date" className="search-input" placeholder="사용 종료일" />
+                        <button className="btn">🔍 검색</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>번호</th>
+                                <th>장비명</th>
+                                <th>연구시작일</th>
+                                <th>공동활용 기관</th>
+                                <th>공동활용 사용자</th>
+                                <th>장비 사용 시작일</th>
+                                <th>장비 사용 종료일</th>
+                                <th>등록 작성자</th>
+                                <th>장비 사용 목적</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {inspectionLogs.map(log => (
+                                <tr key={log.id}>
+                                    <td>{log.id}</td>
+                                    <td><strong>{log.equipment}</strong></td>
+                                    <td>{log.startDate}</td>
+                                    <td>{log.institution}</td>
+                                    <td>{log.user}</td>
+                                    <td>{log.useStartDate}</td>
+                                    <td>{log.useEndDate}</td>
+                                    <td>{log.registrant}</td>
+                                    <td>{log.purpose}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="pagination">
+                        <button className="page-btn">«</button>
+                        <button className="page-btn active">1</button>
+                        <button className="page-btn">2</button>
+                        <button className="page-btn">»</button>
+                    </div>
+                </div>
+            );
+
+            const renderOperationLog = () => (
+                <div className="content-card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span>📄</span>
+                            연구장비 운영일지
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="btn">📥 엑셀 다운로드</button>
+                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                + 운영일지 작성
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="search-bar">
+                        <select className="search-select">
+                            <option>전체 장비</option>
+                            <option>CTD 센서</option>
+                            <option>멀티빔 음향측심기</option>
+                            <option>해수 샘플러</option>
+                            <option>기상 관측 장비</option>
+                            <option>수중 카메라</option>
+                        </select>
+                        <input type="date" className="search-input" placeholder="연구활동 시작일" />
+                        <span style={{ padding: '12px', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                        <input type="date" className="search-input" placeholder="연구활동 종료일" />
+                        <button className="btn">🔍 조회</button>
+                    </div>
+
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>번호</th>
+                                <th>장비명</th>
+                                <th>연구시작일</th>
+                                <th>연구종료일</th>
+                                <th>사용시간</th>
+                                <th>사용활동내역</th>
+                                <th>실사용자</th>
+                                <th style={{ width: '100px' }}>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {operationLogs.map(log => (
+                                <tr key={log.id}>
+                                    <td>{log.id}</td>
+                                    <td><strong>{log.equipment}</strong></td>
+                                    <td>{log.startDate}</td>
+                                    <td>{log.endDate}</td>
+                                    <td>
+                                        <span className="badge badge-info">{log.useTime}</span>
+                                    </td>
+                                    <td>{log.activity}</td>
+                                    <td>{log.actualUser}</td>
+                                    <td>
+                                        <button className="btn" style={{ padding: '6px 12px', fontSize: '12px' }}>상세</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="pagination">
+                        <button className="page-btn">«</button>
+                        <button className="page-btn active">1</button>
+                        <button className="page-btn">2</button>
+                        <button className="page-btn">»</button>
+                    </div>
+
+                    <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(0, 212, 255, 0.05)', border: '1px solid rgba(0, 212, 255, 0.2)', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginBottom: '10px' }}>
+                            💡 <strong>운영일지 작성 안내</strong>
+                        </div>
+                        <ul style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', paddingLeft: '20px', lineHeight: '1.8' }}>
+                            <li>연구활동 종료 후 24시간 이내 작성을 권장합니다</li>
+                            <li>장비명 검색 시 장비 선택 팝업이 제공됩니다</li>
+                            <li>사용시간은 자동 계산되며 수동 입력도 가능합니다</li>
+                            <li>상세한 활동 내역 작성은 데이터 품질 관리에 도움이 됩니다</li>
+                        </ul>
+                    </div>
+                </div>
+            );
+
+            const renderContent = () => {
+                switch(activeMenu) {
+                    case 'dashboard': return renderDashboard();
+                    case 'notice': return renderNotice();
+                    case 'equipment': return renderEquipment();
+                    case 'parts': return renderPartsManagement();
+                    case 'inspection': return renderInspectionLog();
+                    case 'report': return renderReport();
+                    case 'operation': return renderOperationLog();
+                    case 'data': return renderDataLibrary();
+                    default: return renderDashboard();
+                }
+            };
+
+            return (
+                <div className="app-container">
+                    <aside className="sidebar">
+                        <div className="sidebar-header">
+                            <div className="sidebar-title">🧊 쇄빙연구선</div>
+                            <div className="sidebar-subtitle">통합 관리 시스템</div>
+                        </div>
+
+                        <div className="nav-section">
+                            <div className="nav-section-title">메인</div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('dashboard')}
+                            >
+                                <span className="nav-icon">📊</span>
+                                <span className="nav-text">대시보드</span>
+                            </div>
+                        </div>
+
+                        <div className="nav-section">
+                            <div className="nav-section-title">게시판</div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'notice' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('notice')}
+                            >
+                                <span className="nav-icon">📢</span>
+                                <span className="nav-text">공지사항</span>
+                            </div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'data' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('data')}
+                            >
+                                <span className="nav-icon">📁</span>
+                                <span className="nav-text">취득정보 자료실</span>
+                            </div>
+                        </div>
+
+                        <div className="nav-section">
+                            <div className="nav-section-title">장비 관리</div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'equipment' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('equipment')}
+                            >
+                                <span className="nav-icon">⚙️</span>
+                                <span className="nav-text">장비 현황</span>
+                            </div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'parts' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('parts')}
+                            >
+                                <span className="nav-icon">🔧</span>
+                                <span className="nav-text">부속품 관리</span>
+                            </div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'inspection' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('inspection')}
+                            >
+                                <span className="nav-icon">📝</span>
+                                <span className="nav-text">점검 일지</span>
+                            </div>
+                        </div>
+
+                        <div className="nav-section">
+                            <div className="nav-section-title">보고서</div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'report' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('report')}
+                            >
+                                <span className="nav-icon">📋</span>
+                                <span className="nav-text">사용 이력</span>
+                            </div>
+                            <div 
+                                className={`nav-item ${activeMenu === 'operation' ? 'active' : ''}`}
+                                onClick={() => setActiveMenu('operation')}
+                            >
+                                <span className="nav-icon">📄</span>
+                                <span className="nav-text">운영 일지</span>
+                            </div>
+                        </div>
+
+                        {currentUser.role === 'Administrator' && (
+                            <div className="nav-section">
+                                <div className="nav-section-title">시스템 관리</div>
+                                <div className="nav-item">
+                                    <span className="nav-icon">👥</span>
+                                    <span className="nav-text">사용자 관리</span>
+                                </div>
+                                <div className="nav-item">
+                                    <span className="nav-icon">🔐</span>
+                                    <span className="nav-text">권한 관리</span>
+                                </div>
+                                <div className="nav-item">
+                                    <span className="nav-icon">⚙️</span>
+                                    <span className="nav-text">코드 관리</span>
+                                </div>
+                            </div>
+                        )}
+                    </aside>
+
+                    <main className="main-content">
+                        <div className="header">
+                            <div className="header-left">
+                                <h1>쇄빙연구선 통합 관리 시스템</h1>
+                                <p>연구장비 및 데이터 관리 플랫폼</p>
+                            </div>
+                            <div className="header-right">
+                                <div className="user-info">
+                                    <div className="user-avatar">{currentUser.avatar}</div>
+                                    <div className="user-details">
+                                        <div className="user-name">{currentUser.name}</div>
+                                        <div className="user-role">{currentUser.role}</div>
+                                    </div>
+                                </div>
+                                <button className="btn">🔔</button>
+                                <button className="btn">⚙️</button>
+                            </div>
+                        </div>
+
+                        {renderContent()}
+                    </main>
+
+                    {showModal && (
+                        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <div className="modal-title">
+                                        {activeMenu === 'notice' && '공지사항 작성'}
+                                        {activeMenu === 'equipment' && '장비 등록'}
+                                        {activeMenu === 'parts' && '부속품 등록'}
+                                        {activeMenu === 'operation' && '운영일지 작성'}
+                                    </div>
+                                    <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                                </div>
+
+                                {activeMenu === 'notice' && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">카테고리</label>
+                                            <select className="form-input">
+                                                <option>공지</option>
+                                                <option>자료</option>
+                                                <option>보고서</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">제목</label>
+                                            <input type="text" className="form-input" placeholder="제목을 입력하세요" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">내용</label>
+                                            <textarea className="form-input form-textarea" placeholder="내용을 입력하세요"></textarea>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">첨부파일</label>
+                                            <div className="file-upload">
+                                                <div className="file-upload-icon">📁</div>
+                                                <div className="file-upload-text">파일을 드래그하거나 클릭하여 업로드</div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {activeMenu === 'equipment' && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">장비명 (국문)</label>
+                                            <input type="text" className="form-input" placeholder="장비명을 입력하세요" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">장비명 (영문)</label>
+                                            <input type="text" className="form-input" placeholder="Equipment Name" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">취득일자</label>
+                                            <input type="date" className="form-input" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">장비 상태</label>
+                                            <select className="form-input">
+                                                <option>Standby</option>
+                                                <option>Active</option>
+                                                <option>Idleness</option>
+                                                <option>Disuse</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">설명</label>
+                                            <textarea className="form-input form-textarea" placeholder="장비 설명을 입력하세요"></textarea>
+                                        </div>
+                                    </>
+                                )}
+
+                                {activeMenu === 'parts' && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">부속품명</label>
+                                            <input type="text" className="form-input" placeholder="부속품명을 입력하세요" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">파트번호</label>
+                                            <input type="text" className="form-input" placeholder="예: CTD-C-001" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">소유 장비</label>
+                                            <select className="form-input">
+                                                <option>장비 선택</option>
+                                                <option>CTD 센서</option>
+                                                <option>멀티빔 음향측심기</option>
+                                                <option>해수 샘플러</option>
+                                                <option>기상 관측 장비</option>
+                                                <option>수중 카메라</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">부속품 유형</label>
+                                            <select className="form-input">
+                                                <option>SparePart</option>
+                                                <option>Store</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">단가 (₩)</label>
+                                            <input type="number" className="form-input" placeholder="0" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">총 선적 수량</label>
+                                            <input type="number" className="form-input" placeholder="0" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">최초 선적일</label>
+                                            <input type="date" className="form-input" />
+                                        </div>
+                                    </>
+                                )}
+
+                                {activeMenu === 'operation' && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">장비명</label>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <input type="text" className="form-input" placeholder="장비 선택" readOnly />
+                                                <button className="btn">🔍 검색</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">연구 시작일</label>
+                                            <input type="date" className="form-input" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">연구 종료일</label>
+                                            <input type="date" className="form-input" />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">사용 시간 (자동 계산)</label>
+                                            <input type="text" className="form-input" placeholder="0h" readOnly />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">사용 활동 내역</label>
+                                            <textarea className="form-input form-textarea" placeholder="수행한 연구 활동을 상세히 기록하세요"></textarea>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">실사용자</label>
+                                            <input type="text" className="form-input" placeholder="실사용자 이름" />
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="modal-actions">
+                                    <button className="btn" onClick={() => setShowModal(false)}>취소</button>
+                                    <button className="btn btn-primary" onClick={() => setShowModal(false)}>
+                                        {activeMenu === 'operation' ? '작성 완료' : '등록'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -11,10 +11,11 @@ export default function LoginPage() {
 
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         if (!id.trim() || !password.trim()) return alert('ID 또는 PW 를 입력하세요.');
         login({id: id.trim(), pw: password});
         const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
-        navigate(from, {replace: true});
+        navigate(from, {replace: true}); // 원래 가려던 페이지로 이동
     }
 
     return (

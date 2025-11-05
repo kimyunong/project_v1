@@ -1,0 +1,2971 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>육상 통합 관제 시스템</title>
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0a1929 0%, #1a2332 100%);
+        color: #fff;
+        overflow: hidden;
+      }
+
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      /* Top Header */
+      .top-header {
+        background: rgba(13, 31, 51, 0.95);
+        border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        z-index: 100;
+      }
+
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .logo-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .logo-subtitle {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .time-display {
+        display: flex;
+        gap: 20px;
+      }
+
+      .time-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 15px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+      }
+
+      .time-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 3px;
+      }
+
+      .time-value {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d4ff;
+        font-family: 'Courier New', monospace;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .notification-btn {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .notification-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        transform: scale(1.05);
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff4444;
+        color: #fff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 15px;
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+      }
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #00d4ff, #00ffaa);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .user-name {
+        font-size: 14px;
+        color: #fff;
+      }
+
+      /* Main Content */
+      .main-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 80px;
+        background: rgba(13, 31, 51, 0.95);
+        border-right: 1px solid rgba(0, 212, 255, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        backdrop-filter: blur(10px);
+      }
+
+      .sidebar-btn {
+        width: 56px;
+        height: 56px;
+        margin: 8px 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 24px;
+        position: relative;
+      }
+
+      .sidebar-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        transform: translateX(5px);
+      }
+
+      .sidebar-btn.active {
+        background: rgba(0, 212, 255, 0.3);
+        border-color: #00d4ff;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+      }
+
+      .sidebar-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 4px;
+      }
+
+      /* Content Area */
+      .content-area {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
+
+      /* Map Container */
+      .map-container {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .map-canvas {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, #0d1f33 0%, #1a2f45 100%);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Ship Markers */
+      .ship-marker {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        animation: shipPulse 2s ease-in-out infinite;
+        z-index: 50;
+      }
+
+      .ship-icon {
+        width: 48px;
+        height: 48px;
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.3), transparent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .ship-icon::before {
+        content: '⛴️';
+        font-size: 32px;
+        filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.8));
+      }
+
+      .ship-status-indicator {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #0d1f33;
+        animation: statusPulse 1.5s ease-in-out infinite;
+      }
+
+      .status-online {
+        background: #00ffaa;
+        box-shadow: 0 0 10px rgba(0, 255, 170, 0.8);
+      }
+
+      .status-offline {
+        background: #ff4444;
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+      }
+
+      .status-warning {
+        background: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.8);
+      }
+
+      @keyframes shipPulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.1);
+        }
+      }
+
+      @keyframes statusPulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .ship-label {
+        position: absolute;
+        top: 55px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 6px;
+        padding: 6px 12px;
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: bold;
+        color: #00d4ff;
+        backdrop-filter: blur(10px);
+      }
+
+      .ship-detail-box {
+        position: absolute;
+        top: 50%;
+        left: 65px;
+        transform: translateY(-50%);
+        background: rgba(13, 31, 51, 0.98);
+        border: 1px solid rgba(0, 212, 255, 0.5);
+        border-radius: 10px;
+        padding: 12px 15px;
+        min-width: 220px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        animation: fadeInRight 0.3s ease;
+        pointer-events: auto;
+      }
+
+      @keyframes fadeInRight {
+        from {
+          opacity: 0;
+          transform: translateY(-50%) translateX(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(-50%) translateX(0);
+        }
+      }
+
+      .ship-detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-size: 12px;
+      }
+
+      .ship-detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .ship-detail-label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .ship-detail-value {
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      .ship-detail-eta {
+        color: #00ffaa;
+        font-weight: bold;
+      }
+
+      .ship-trail {
+        position: absolute;
+        pointer-events: none;
+        z-index: 40;
+      }
+
+      .trail-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #00d4ff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        animation: trailFade 3s ease-in-out infinite;
+      }
+
+      @keyframes trailFade {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      /* Right Panel */
+      .right-panel {
+        width: 400px;
+        background: rgba(13, 31, 51, 0.95);
+        border-left: 1px solid rgba(0, 212, 255, 0.3);
+        overflow-y: auto;
+        backdrop-filter: blur(10px);
+      }
+
+      .panel-section {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d4ff;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* Ship Cards */
+      .ship-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .ship-card:hover {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: #00d4ff;
+        transform: translateX(-5px);
+      }
+
+      .ship-card.selected {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+      }
+
+      .ship-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .ship-name {
+        font-size: 15px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .ship-status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: statusPulse 1.5s ease-in-out infinite;
+      }
+
+      .badge-online {
+        background: rgba(0, 255, 170, 0.2);
+        color: #00ffaa;
+        border: 1px solid rgba(0, 255, 170, 0.3);
+      }
+
+      .badge-offline {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+        border: 1px solid rgba(255, 68, 68, 0.3);
+      }
+
+      .badge-warning {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+      }
+
+      .ship-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .info-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+      }
+
+      .info-value {
+        color: #fff;
+        font-weight: 500;
+      }
+
+      /* Equipment Status */
+      .equipment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .equipment-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        padding: 12px;
+        transition: all 0.3s ease;
+      }
+
+      .equipment-item:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: #00d4ff;
+      }
+
+      .equipment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .equipment-name {
+        font-size: 13px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .equipment-status {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 10px;
+      }
+
+      .status-normal {
+        background: rgba(0, 255, 170, 0.2);
+        color: #00ffaa;
+      }
+
+      .status-alert {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+      }
+
+      .equipment-data {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Alert List */
+      .alert-item {
+        background: rgba(255, 68, 68, 0.1);
+        border: 1px solid rgba(255, 68, 68, 0.3);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .alert-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .alert-title {
+        font-size: 13px;
+        font-weight: bold;
+        color: #ff4444;
+      }
+
+      .alert-time {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .alert-message {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.5;
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .stat-box {
+        background: rgba(0, 212, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #00d4ff;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      /* Data Sync Status */
+      .sync-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(0, 212, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+
+      .sync-icon {
+        font-size: 20px;
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .sync-info {
+        flex: 1;
+      }
+
+      .sync-title {
+        font-size: 13px;
+        font-weight: bold;
+        color: #fff;
+        margin-bottom: 3px;
+      }
+
+      .sync-time {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      /* Map Controls */
+      .map-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 500;
+      }
+
+      .control-btn {
+        width: 40px;
+        height: 40px;
+        background: rgba(13, 31, 51, 0.95);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        font-size: 18px;
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      .control-btn:hover {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        transform: scale(1.1);
+        color: #00ffaa;
+      }
+
+      /* Bottom Status Bar */
+      .bottom-status-bar {
+        background: rgba(13, 31, 51, 0.95);
+        border-top: 1px solid rgba(0, 212, 255, 0.3);
+        padding: 12px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .status-icon {
+        font-size: 16px;
+      }
+
+      .status-text {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .status-value {
+        color: #00d4ff;
+        font-weight: bold;
+      }
+
+      /* Connection Status */
+      .connection-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(0, 255, 170, 0.1);
+        border: 1px solid rgba(0, 255, 170, 0.3);
+        border-radius: 6px;
+      }
+
+      .connection-dot {
+        width: 10px;
+        height: 10px;
+        background: #00ffaa;
+        border-radius: 50%;
+        animation: statusPulse 1.5s ease-in-out infinite;
+      }
+
+      .connection-text {
+        font-size: 12px;
+        color: #00ffaa;
+        font-weight: bold;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 212, 255, 0.3);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 255, 0.5);
+      }
+
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .right-panel {
+          width: 320px;
+        }
+      }
+
+      /* Leaflet 커스텀 마커 배경 제거 */
+      .custom-leaflet-marker {
+        background: none !important;
+        border: none !important;
+      }
+
+      /* Leaflet 팝업 스타일 커스터마이징 */
+      .custom-ship-popup .leaflet-popup-content-wrapper {
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+      }
+
+      .custom-ship-popup .leaflet-popup-content {
+        margin: 0;
+      }
+
+      .custom-ship-popup .leaflet-popup-tip {
+        background: rgba(13, 31, 51, 0.98);
+        border: 1px solid rgba(0, 212, 255, 0.5);
+      }
+
+      .custom-ship-popup .ship-detail-box {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        animation: none !important;
+      }
+
+      /* select 공통 */
+      select {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+      }
+
+      /* 옵션 항목 */
+      select option {
+        background-color: #0d1f33; /* 드롭다운 펼쳐졌을 때 배경 */
+        color: #fff; /* 텍스트 색상 */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      function App() {
+        const [currentTime, setCurrentTime] = useState(new Date());
+        const [selectedShip, setSelectedShip] = useState(null);
+        const [activeView, setActiveView] = useState('monitoring');
+        const leafletMapRef = useRef(null);
+
+        const focusShip = (shipKey, opts = {}) => {
+          setSelectedShip(shipKey);
+
+          const map = leafletMapRef.current;
+          const ship = ships?.[shipKey];
+          if (!map || !ship?.latLng) return;
+
+          const targetZoom = opts.zoom ?? Math.max(map.getZoom(), 5);
+          map.flyTo(ship.latLng, targetZoom, {
+            animate: true,
+            duration: opts.duration ?? 1.1,
+            easeLinearity: 0.25,
+          });
+        };
+
+        useEffect(() => {
+          const timer = setInterval(() => {
+            setCurrentTime(new Date());
+          }, 1000);
+          return () => clearInterval(timer);
+        }, []);
+
+        // Leaflet 지도 초기화
+        useEffect(() => {
+          if (activeView === 'monitoring') {
+            const mapElement = document.getElementById('leaflet-map');
+
+            if (leafletMapRef.current && mapElement) {
+              // 지도는 있는데 DOM이 새로 생성됨 → 재초기화 필요
+              setTimeout(() => {
+                leafletMapRef.current.invalidateSize();
+              }, 100);
+            } else if (!leafletMapRef.current && mapElement) {
+              // 지도 생성
+              leafletMapRef.current = L.map('leaflet-map', {
+                center: [-60, 120],
+                zoom: 3,
+                minZoom: 4,
+                maxZoom: 10,
+                zoomControl: false,
+                attributionControl: false,
+                maxBounds: [
+                  [-90, -180],
+                  [90, 180],
+                ],
+                maxBoundsViscosity: 1.0,
+                worldCopyJump: false,
+              });
+
+              L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 18,
+              }).addTo(leafletMapRef.current);
+
+              Object.entries(ships).forEach(([key, ship]) => {
+                if (ship.latLng) {
+                  const shipIcon = L.divIcon({
+                    className: 'custom-leaflet-marker',
+                    html: `
+                                        <div class="ship-marker">
+                                            <div class="ship-trail">
+                                                <div class="trail-dot" style="top: 0px; left: 0px; animation-delay: 0s"></div>
+                                                <div class="trail-dot" style="top: 15px; left: -10px; animation-delay: 0.3s"></div>
+                                                <div class="trail-dot" style="top: 30px; left: -20px; animation-delay: 0.6s"></div>
+                                                <div class="trail-dot" style="top: 45px; left: -30px; animation-delay: 0.9s"></div>
+                                                <div class="trail-dot" style="top: 60px; left: -40px; animation-delay: 1.2s"></div>
+                                            </div>
+                                            <div class="ship-icon">
+                                                <div class="ship-status-indicator status-${ship.status}"></div>
+                                            </div>
+                                            <div class="ship-label">${ship.name}</div>
+                                        </div>
+                                    `,
+                    iconSize: [80, 80],
+                    iconAnchor: [40, 40],
+                  });
+
+                  // ship-detail-box를 팝업으로 생성
+                  const popupContent = `
+                                    <div class="ship-detail-box" style="position: relative; transform: none; top: auto; left: auto;">
+                                        <div class="ship-detail-row">
+                                            <span class="ship-detail-label">현재 속도</span>
+                                            <span class="ship-detail-value">${ship.speed}</span>
+                                        </div>
+                                        <div class="ship-detail-row">
+                                            <span class="ship-detail-label">진행 방향</span>
+                                            <span class="ship-detail-value">${ship.heading}</span>
+                                        </div>
+                                        <div class="ship-detail-row">
+                                            <span class="ship-detail-label">목적지</span>
+                                            <span class="ship-detail-value">${ship.destination}</span>
+                                        </div>
+                                    ${
+                                      ship.distance !== '-'
+                                        ? `
+                                    <div class="ship-detail-row">
+                                        <span class="ship-detail-label">남은 거리</span>
+                                        <span class="ship-detail-value">${ship.distance}</span>
+                                    </div>
+                                    <div class="ship-detail-row">
+                                        <span class="ship-detail-label">도착 예정</span>
+                                        <span class="ship-detail-eta">${ship.eta}</span>
+                                    </div>
+                                    `
+                                        : ''
+                                    }
+                                        <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0; padding-top: 8px;">
+                                            <div class="ship-detail-row">
+                                                <span class="ship-detail-label">수온/염분</span>
+                                                <span class="ship-detail-value">${ship.ctdData.temperature} / ${
+                    ship.ctdData.salinity
+                  }</span>
+                                            </div>
+                                            <div class="ship-detail-row">
+                                                <span class="ship-detail-label">기온/풍속</span>
+                                                <span class="ship-detail-value">${ship.meteorological.airTemp} / ${
+                    ship.meteorological.windSpeed
+                  }</span>
+                                            </div>
+                                            <div class="ship-detail-row">
+                                                <span class="ship-detail-label">빙농도/빙두께</span>
+                                                <span class="ship-detail-value">${ship.oceanData.iceConcentration} / ${
+                    ship.oceanData.iceThickness
+                  }</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+
+                  // 마커 생성 및 팝업 연결
+                  const marker = L.marker(ship.latLng, { icon: shipIcon })
+                    .addTo(leafletMapRef.current)
+                    .bindPopup(popupContent, {
+                      closeButton: true,
+                      offset: [0, -30],
+                      className: 'custom-ship-popup',
+                      autoPan: false,
+                      maxWidth: 300,
+                      minWidth: 250,
+                    });
+
+                  // 클릭 이벤트 : 팝업 열고 선택
+                  marker.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    setSelectedShip(key);
+                    marker.openPopup();
+                  });
+                }
+              });
+
+              // 버튼 이벤트
+              setTimeout(() => {
+                const controls = document.querySelectorAll('.map-controls .control-btn');
+
+                // 확대 버튼 (+)
+                if (controls[0]) {
+                  controls[0].onclick = () => {
+                    leafletMapRef.current.zoomIn();
+                  };
+                }
+
+                // 축소 버튼 (−)
+                if (controls[1]) {
+                  controls[1].onclick = () => {
+                    leafletMapRef.current.zoomOut();
+                  };
+                }
+
+                // 중심이동 버튼 (⊙)
+                if (controls[2]) {
+                  controls[2].onclick = () => focusShip('araon', { zoom: 6, duration: 1.1 });
+                }
+
+                // 전체화면 버튼 (⛶)
+                if (controls[3]) {
+                  controls[3].onclick = () => {
+                    const container = document.querySelector('.map-container');
+                    if (!document.fullscreenElement) {
+                      container.requestFullscreen().catch((err) => {
+                        console.log('전체화면 실패:', err);
+                      });
+                    } else {
+                      document.exitFullscreen();
+                    }
+                  };
+                }
+              }, 100);
+            }
+          } else {
+            // 다른 탭으로 가면 지도 제거
+            if (leafletMapRef.current) {
+              leafletMapRef.current.remove();
+              leafletMapRef.current = null;
+            }
+          }
+        }, [activeView]);
+
+        const formatTime = (date) => {
+          return date.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          });
+        };
+
+        const formatAntarcticaTime = (date) => {
+          const antarcticaTime = new Date(date.getTime() + 12 * 60 * 60 * 1000);
+          return antarcticaTime.toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'UTC',
+          });
+        };
+
+        // Ship data with comprehensive sensor information from icebreaker research vessels
+        const ships = {
+          araon: {
+            name: '아라온호',
+            status: 'online',
+            latLng: [-63.5664, 130.9781],
+            location: '남극해 로스해',
+            coordinates: '75°33\'59"S 165°58\'41"E',
+            speed: '12.5 kts',
+            heading: '045°',
+            destination: '장보고과학기지',
+            eta: '2025-10-23 14:30',
+            distance: '156 NM',
+            lastUpdate: '2분 전',
+            // Navigation System Data
+            navigation: {
+              gps: '정상',
+              gyro: '정상',
+              radar: '정상',
+              ais: '정상',
+            },
+            // Ship Operation Data
+            operation: {
+              engineRpm: '850 RPM',
+              engineTemp: '78°C',
+              fuelConsumption: '245 L/h',
+              fuelRemaining: '78%',
+              hydraulicPressure: '185 bar',
+              powerGeneration: '2,450 kW',
+              batteryVoltage: '24.8 V',
+            },
+            // CTD Sensor Data (Conductivity, Temperature, Depth)
+            ctdData: {
+              temperature: '-1.8°C',
+              salinity: '34.2 PSU',
+              depth: '245 m',
+              conductivity: '28.5 mS/cm',
+              density: '1027.8 kg/m³',
+              soundVelocity: '1449 m/s',
+            },
+            // Meteorological Data
+            meteorological: {
+              airTemp: '-15°C',
+              windSpeed: '15 kts',
+              windDirection: '225° (SW)',
+              pressure: '1013 hPa',
+              humidity: '72%',
+              precipitation: '0 mm/h',
+              visibility: '8 NM',
+              solarRadiation: '245 W/m²',
+            },
+            // Ocean Data
+            oceanData: {
+              seaTemp: '-1.8°C',
+              waveHeight: '2.5 m',
+              wavePeriod: '8 sec',
+              waveDirection: '240° (WSW)',
+              currentSpeed: '0.8 kts',
+              currentDirection: '190° (S)',
+              iceConcentration: '35%',
+              iceThickness: '0.8 m',
+            },
+            // Water Sample Analysis
+            waterSample: {
+              pH: '8.1',
+              dissolvedOxygen: '8.2 mg/L',
+              turbidity: '2.4 NTU',
+              chlorophyll: '0.85 μg/L',
+              nutrients: '정상 범위',
+              microplastics: '검출됨',
+            },
+            // Multibeam Echosounder Data
+            multibeam: {
+              waterDepth: '2,450 m',
+              coverage: '250 m',
+              resolution: '0.5 m',
+              seabedType: '퇴적물',
+              dataQuality: '우수',
+            },
+            // Research Equipment Status
+            equipment: [
+              { name: 'CTD 센서', status: 'normal', value: '수온 -1.8°C, 염분 34.2 PSU', lastData: '2분 전' },
+              { name: '멀티빔 음향측심기', status: 'normal', value: '수심 2,450m', lastData: '2분 전' },
+              { name: '기상 관측 장비', status: 'normal', value: '기온 -15°C, 풍속 15kts', lastData: '3분 전' },
+              { name: '해수 샘플러', status: 'alert', value: 'pH 8.1, DO 8.2mg/L', lastData: '5분 전' },
+              { name: '수중 카메라', status: 'normal', value: '4K 녹화 중', lastData: '1분 전' },
+              { name: '해저 퇴적물 채취기', status: 'normal', value: '대기', lastData: '10분 전' },
+              { name: '해류계', status: 'normal', value: '유속 0.8kts', lastData: '4분 전' },
+              { name: '빙두께 측정기', status: 'normal', value: '두께 0.8m', lastData: '6분 전' },
+            ],
+          },
+          jangbogo: {
+            name: '장보고호',
+            status: 'warning',
+            position: { top: '52%', left: '35%' },
+            latLng: [-74, -55],
+            location: '남극 킹조지섬',
+            coordinates: '62°13\'00"S 58°44\'00"W',
+            speed: '0 kts',
+            heading: '000°',
+            destination: '정박 중',
+            eta: '정박 중',
+            distance: '-',
+            lastUpdate: '15분 전',
+            navigation: {
+              gps: '정상',
+              gyro: '정상',
+              radar: '점검 중',
+              ais: '정상',
+            },
+            operation: {
+              engineRpm: '0 RPM',
+              engineTemp: '25°C',
+              fuelConsumption: '0 L/h',
+              fuelRemaining: '92%',
+              hydraulicPressure: '0 bar',
+              powerGeneration: '850 kW',
+              batteryVoltage: '24.2 V',
+            },
+            ctdData: {
+              temperature: '0.2°C',
+              salinity: '33.8 PSU',
+              depth: '15 m',
+              conductivity: '29.2 mS/cm',
+              density: '1026.5 kg/m³',
+              soundVelocity: '1445 m/s',
+            },
+            meteorological: {
+              airTemp: '-8°C',
+              windSpeed: '8 kts',
+              windDirection: '180° (S)',
+              pressure: '1018 hPa',
+              humidity: '85%',
+              precipitation: '0 mm/h',
+              visibility: '12 NM',
+              solarRadiation: '180 W/m²',
+            },
+            oceanData: {
+              seaTemp: '0.2°C',
+              waveHeight: '0.5 m',
+              wavePeriod: '4 sec',
+              waveDirection: '190° (S)',
+              currentSpeed: '0.3 kts',
+              currentDirection: '180° (S)',
+              iceConcentration: '5%',
+              iceThickness: '0.2 m',
+            },
+            waterSample: {
+              pH: '8.0',
+              dissolvedOxygen: '9.5 mg/L',
+              turbidity: '1.8 NTU',
+              chlorophyll: '1.2 μg/L',
+              nutrients: '정상 범위',
+              microplastics: '미검출',
+            },
+            multibeam: {
+              waterDepth: '850 m',
+              coverage: '180 m',
+              resolution: '0.5 m',
+              seabedType: '암반',
+              dataQuality: '양호',
+            },
+            equipment: [
+              { name: 'CTD 센서', status: 'normal', value: '수온 0.2°C, 염분 33.8 PSU', lastData: '15분 전' },
+              { name: '기상 관측 장비', status: 'warning', value: '통신 지연', lastData: '30분 전' },
+              { name: '수중 카메라', status: 'normal', value: '가동 중', lastData: '20분 전' },
+              { name: '해수 샘플러', status: 'normal', value: 'pH 8.0, DO 9.5mg/L', lastData: '25분 전' },
+            ],
+          },
+        };
+
+        // Alerts data
+        const alerts = [
+          {
+            id: 1,
+            ship: '아라온호',
+            title: '해수 샘플러 점검 필요',
+            message: '샘플러 밸브 압력 이상 감지',
+            time: '5분 전',
+            severity: 'warning',
+          },
+          {
+            id: 2,
+            ship: '장보고호',
+            title: '통신 지연 발생',
+            message: '기상 관측 장비 데이터 전송 지연 (15분)',
+            time: '18분 전',
+            severity: 'info',
+          },
+          {
+            id: 3,
+            ship: '아라온호',
+            title: '정기 점검 알림',
+            message: 'CTD 센서 정기 점검 예정 (24시간 후)',
+            time: '1시간 전',
+            severity: 'info',
+          },
+        ];
+
+        const currentShip = ships[selectedShip];
+
+        // Render functions for different views
+        const renderMonitoringView = () => (
+          <>
+            {/* Map Container */}
+            <div className="map-container">
+              <div id="leaflet-map" className="map-canvas" />
+
+              {/* Map Controls */}
+              <div className="map-controls">
+                <button className="control-btn" title="확대">
+                  +
+                </button>
+                <button className="control-btn" title="축소">
+                  −
+                </button>
+                <button className="control-btn" title="중심이동">
+                  ⊙
+                </button>
+                <button className="control-btn" title="전체화면">
+                  ⛶
+                </button>
+              </div>
+            </div>
+
+            {/* Right Panel */}
+            <div className="right-panel">
+              {/* Ship List Section */}
+              <div className="panel-section">
+                <div className="panel-title">
+                  <span>⛴️</span>
+                  선박 현황
+                </div>
+                {Object.entries(ships).map(([key, ship]) => (
+                  <div
+                    key={key}
+                    className={`ship-card ${selectedShip === key ? 'selected' : ''}`}
+                    onClick={() => focusShip(key, { zoom: 6 })}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') focusShip(key, { zoom: 6 });
+                    }}
+                    aria-pressed={selectedShip === key}
+                    aria-label={`${ship.name} 포커스`}
+                  >
+                    <div className="ship-card-header">
+                      <div className="ship-name">{ship.name}</div>
+                      <div className={`ship-status-badge badge-${ship.status}`}>
+                        <div
+                          className="status-dot"
+                          style={{
+                            background: ship.status === 'online' ? '#00ffaa' : ship.status === 'warning' ? '#ffc107' : '#ff4444',
+                          }}
+                        ></div>
+                        {ship.status === 'online' ? '정상' : ship.status === 'warning' ? '주의' : '오프라인'}
+                      </div>
+                    </div>
+                    <div className="ship-info">
+                      <div className="info-item">
+                        <div className="info-label">현재 위치</div>
+                        <div className="info-value">{ship.location}</div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">속도</div>
+                        <div className="info-value">{ship.speed}</div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">목적지</div>
+                        <div className="info-value">{ship.destination}</div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">도착 예정</div>
+                        <div className="info-value" style={{ color: ship.eta === '정박 중' ? '#ffc107' : '#00ffaa' }}>
+                          {ship.eta}
+                        </div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">좌표</div>
+                        <div className="info-value" style={{ fontSize: '10px' }}>
+                          {ship.coordinates}
+                        </div>
+                      </div>
+                      <div className="info-item">
+                        <div className="info-label">마지막 업데이트</div>
+                        <div className="info-value">{ship.lastUpdate}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Equipment Status Section */}
+              <div className="panel-section">
+                <div className="panel-title">
+                  <span>🔧</span>
+                  {selectedShip ? ships[selectedShip].name : '선박 선택'} 연구장비 상태
+                </div>
+                {selectedShip ? (
+                  <div className="equipment-list">
+                    {ships[selectedShip].equipment.map((eq, idx) => (
+                      <div key={idx} className="equipment-item">
+                        <div className="equipment-header">
+                          <div className="equipment-name">{eq.name}</div>
+                          <div className={`equipment-status status-${eq.status}`}>{eq.status === 'normal' ? '정상' : '경고'}</div>
+                        </div>
+                        <div className="equipment-data">
+                          <span>{eq.value}</span>
+                          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginLeft: '8px' }}>{eq.lastData}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: '40px 20px',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      fontSize: '14px',
+                    }}
+                  >
+                    지도에서 선박을 클릭하여 장비 상태를 확인하세요
+                  </div>
+                )}
+              </div>
+
+              {/* Comprehensive Sensor Data Section */}
+              {selectedShip && (
+                <>
+                  {/* CTD Sensor Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>🌊</span>
+                      CTD 센서 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].ctdData).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'temperature'
+                              ? '수온'
+                              : key === 'salinity'
+                              ? '염분'
+                              : key === 'depth'
+                              ? '깊이'
+                              : key === 'conductivity'
+                              ? '전기전도도'
+                              : key === 'density'
+                              ? '밀도'
+                              : '음속'}
+                          </span>
+                          <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Meteorological Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>🌤️</span>
+                      기상 관측 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].meteorological).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'airTemp'
+                              ? '기온'
+                              : key === 'windSpeed'
+                              ? '풍속'
+                              : key === 'windDirection'
+                              ? '풍향'
+                              : key === 'pressure'
+                              ? '기압'
+                              : key === 'humidity'
+                              ? '습도'
+                              : key === 'precipitation'
+                              ? '강수량'
+                              : key === 'visibility'
+                              ? '시정'
+                              : '일사량'}
+                          </span>
+                          <span style={{ color: '#00ffaa', fontWeight: 'bold' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ocean Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>🌊</span>
+                      해양 환경 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].oceanData).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'seaTemp'
+                              ? '수온'
+                              : key === 'waveHeight'
+                              ? '파고'
+                              : key === 'wavePeriod'
+                              ? '파주기'
+                              : key === 'waveDirection'
+                              ? '파향'
+                              : key === 'currentSpeed'
+                              ? '유속'
+                              : key === 'currentDirection'
+                              ? '유향'
+                              : key === 'iceConcentration'
+                              ? '빙농도'
+                              : '빙두께'}
+                          </span>
+                          <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Water Sample Analysis */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>🧪</span>
+                      해수 분석 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].waterSample).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'pH'
+                              ? 'pH'
+                              : key === 'dissolvedOxygen'
+                              ? '용존산소'
+                              : key === 'turbidity'
+                              ? '탁도'
+                              : key === 'chlorophyll'
+                              ? '클로로필'
+                              : key === 'nutrients'
+                              ? '영양염'
+                              : '미세플라스틱'}
+                          </span>
+                          <span
+                            style={{
+                              color: key === 'microplastics' && value === '검출됨' ? '#ffc107' : '#00ffaa',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Multibeam Echosounder Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>📡</span>
+                      멀티빔 음향측심 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].multibeam).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'waterDepth'
+                              ? '수심'
+                              : key === 'coverage'
+                              ? '커버리지'
+                              : key === 'resolution'
+                              ? '해상도'
+                              : key === 'seabedType'
+                              ? '해저유형'
+                              : '품질'}
+                          </span>
+                          <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ship Operation Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>⚙️</span>
+                      선박 운항 데이터
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].operation).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'engineRpm'
+                              ? '엔진 RPM'
+                              : key === 'engineTemp'
+                              ? '엔진 온도'
+                              : key === 'fuelConsumption'
+                              ? '연료 소비'
+                              : key === 'fuelRemaining'
+                              ? '잔여 연료'
+                              : key === 'hydraulicPressure'
+                              ? '유압'
+                              : key === 'powerGeneration'
+                              ? '발전량'
+                              : '배터리'}
+                          </span>
+                          <span style={{ color: '#00ffaa', fontWeight: 'bold' }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navigation System Data */}
+                  <div className="panel-section">
+                    <div className="panel-title">
+                      <span>🧭</span>
+                      항해 장비 상태
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {Object.entries(ships[selectedShip].navigation).map(([key, value]) => (
+                        <div
+                          key={key}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '12px',
+                          }}
+                        >
+                          <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {key === 'gps' ? 'GPS' : key === 'gyro' ? 'Gyro' : key === 'radar' ? 'Radar' : 'AIS'}
+                          </span>
+                          <span
+                            style={{
+                              color: value === '정상' ? '#00ffaa' : '#ffc107',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Alerts Section */}
+              <div className="panel-section">
+                <div className="panel-title">
+                  <span>⚠️</span>
+                  알림 ({alerts.length})
+                </div>
+                {alerts.map((alert) => (
+                  <div key={alert.id} className="alert-item">
+                    <div className="alert-header">
+                      <div className="alert-title">
+                        {alert.ship} - {alert.title}
+                      </div>
+                      <div className="alert-time">{alert.time}</div>
+                    </div>
+                    <div className="alert-message">{alert.message}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Data Sync Section */}
+              <div className="panel-section">
+                <div className="panel-title">
+                  <span>🔄</span>
+                  데이터 동기화
+                </div>
+                <div className="sync-status">
+                  <div className="sync-icon">⟳</div>
+                  <div className="sync-info">
+                    <div className="sync-title">실시간 동기화 중</div>
+                    <div className="sync-time">마지막 동기화: 방금 전</div>
+                  </div>
+                </div>
+                <div className="stats-grid">
+                  <div className="stat-box">
+                    <div className="stat-value">3,610</div>
+                    <div className="stat-label">총 수신 파일</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="stat-value">59.4GB</div>
+                    <div className="stat-label">총 전송량</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="stat-value">99.6%</div>
+                    <div className="stat-label">동기화 성공률</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="stat-value">8ms</div>
+                    <div className="stat-label">평균 응답시간</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+
+        const renderDataView = () => (
+          <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+            <div
+              style={{
+                background: 'rgba(13, 31, 51, 0.95)',
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: '12px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <span>💾</span>
+                취득정보 자료실
+              </div>
+
+              <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <select
+                  style={{
+                    padding: '12px 15px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '14px',
+                  }}
+                >
+                  <option>전체 선박</option>
+                  <option>아라온호</option>
+                  <option>장보고호</option>
+                </select>
+                <select
+                  style={{
+                    padding: '12px 15px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '14px',
+                  }}
+                >
+                  <option>전체 장비</option>
+                  <option>CTD 센서</option>
+                  <option>멀티빔 음향측심기</option>
+                  <option>기상 관측 장비</option>
+                  <option>해수 샘플러</option>
+                  <option>수중 카메라</option>
+                  <option>해저 퇴적물 채취기</option>
+                  <option>해류계</option>
+                  <option>빙두께 측정기</option>
+                  <option>GPS/항해장비</option>
+                  <option>선박 센서</option>
+                </select>
+                <input
+                  type="date"
+                  style={{
+                    padding: '12px 15px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '14px',
+                  }}
+                  defaultValue="2025-10-15"
+                />
+                <span style={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.5)' }}>~</span>
+                <input
+                  type="date"
+                  style={{
+                    padding: '12px 15px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '14px',
+                  }}
+                  defaultValue="2025-10-21"
+                />
+                <button
+                  style={{
+                    padding: '12px 20px',
+                    background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#0a1929',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  🔍 조회
+                </button>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(0, 212, 255, 0.1)' }}>
+                      <th
+                        style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        파일명
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        선박
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        장비
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        유형
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'right', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        크기
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        수신시간
+                      </th>
+                      <th
+                        style={{ padding: '15px', textAlign: 'center', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                      >
+                        다운로드
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        file: 'CTD_data_20251021_143522.csv',
+                        ship: '아라온호',
+                        equipment: 'CTD 센서',
+                        type: 'CSV',
+                        size: '2.4 MB',
+                        time: '14:35:22',
+                        status: 'complete',
+                        desc: '수온,염분,깊이,전도도,밀도',
+                      },
+                      {
+                        file: 'multibeam_survey_20251021.dat',
+                        ship: '아라온호',
+                        equipment: '멀티빔 음향측심기',
+                        type: 'DAT',
+                        size: '156 MB',
+                        time: '14:30:15',
+                        status: 'complete',
+                        desc: '수심,해저지형,커버리지',
+                      },
+                      {
+                        file: 'meteorological_20251021_1400.json',
+                        ship: '아라온호',
+                        equipment: '기상 관측 장비',
+                        type: 'JSON',
+                        size: '125 KB',
+                        time: '14:00:03',
+                        status: 'complete',
+                        desc: '기온,풍속,풍향,기압,습도',
+                      },
+                      {
+                        file: 'water_analysis_20251021_1330.xlsx',
+                        ship: '아라온호',
+                        equipment: '해수 샘플러',
+                        type: 'XLSX',
+                        size: '458 KB',
+                        time: '13:30:45',
+                        status: 'complete',
+                        desc: 'pH,용존산소,탁도,클로로필',
+                      },
+                      {
+                        file: 'underwater_video_20251021.mp4',
+                        ship: '장보고호',
+                        equipment: '수중 카메라',
+                        type: 'VIDEO',
+                        size: '845 MB',
+                        time: '13:45:30',
+                        status: 'complete',
+                        desc: '4K영상,해저생물관찰',
+                      },
+                      {
+                        file: 'sediment_sample_20251021.pdf',
+                        ship: '아라온호',
+                        equipment: '해저 퇴적물 채취기',
+                        type: 'PDF',
+                        size: '3.2 MB',
+                        time: '13:15:20',
+                        status: 'complete',
+                        desc: '퇴적물분석,입도분석',
+                      },
+                      {
+                        file: 'ocean_current_20251021.csv',
+                        ship: '아라온호',
+                        equipment: '해류계',
+                        type: 'CSV',
+                        size: '892 KB',
+                        time: '13:00:00',
+                        status: 'complete',
+                        desc: '유속,유향,층별데이터',
+                      },
+                      {
+                        file: 'ice_thickness_20251021.dat',
+                        ship: '아라온호',
+                        equipment: '빙두께 측정기',
+                        type: 'DAT',
+                        size: '234 KB',
+                        time: '12:45:10',
+                        status: 'complete',
+                        desc: '빙두께,빙농도,빙질',
+                      },
+                      {
+                        file: 'navigation_log_20251021.log',
+                        ship: '아라온호',
+                        equipment: 'GPS/항해장비',
+                        type: 'LOG',
+                        size: '567 KB',
+                        time: '12:00:00',
+                        status: 'complete',
+                        desc: 'GPS,방향,속도,경로',
+                      },
+                      {
+                        file: 'ship_operation_20251021.json',
+                        ship: '아라온호',
+                        equipment: '선박 센서',
+                        type: 'JSON',
+                        size: '345 KB',
+                        time: '11:30:22',
+                        status: 'complete',
+                        desc: '엔진,연료,유압,발전량',
+                      },
+                      {
+                        file: 'wave_data_20251021_1100.csv',
+                        ship: '아라온호',
+                        equipment: '파랑계',
+                        type: 'CSV',
+                        size: '678 KB',
+                        time: '11:00:15',
+                        status: 'complete',
+                        desc: '파고,파주기,파향',
+                      },
+                      {
+                        file: 'salinity_profile_20251021.dat',
+                        ship: '장보고호',
+                        equipment: 'CTD 센서',
+                        type: 'DAT',
+                        size: '1.8 MB',
+                        time: '10:30:45',
+                        status: 'complete',
+                        desc: '수온,염분,수직분포',
+                      },
+                      {
+                        file: 'solar_radiation_20251021.csv',
+                        ship: '아라온호',
+                        equipment: '기상 관측 장비',
+                        type: 'CSV',
+                        size: '234 KB',
+                        time: '10:00:00',
+                        status: 'complete',
+                        desc: '일사량,자외선,복사열',
+                      },
+                      {
+                        file: 'microplastics_20251021.xlsx',
+                        ship: '아라온호',
+                        equipment: '해수 샘플러',
+                        type: 'XLSX',
+                        size: '892 KB',
+                        time: '09:30:20',
+                        status: 'complete',
+                        desc: '미세플라스틱,입자분석',
+                      },
+                      {
+                        file: 'acoustic_backscatter_20251021.dat',
+                        ship: '아라온호',
+                        equipment: '멀티빔 음향측심기',
+                        type: 'DAT',
+                        size: '234 MB',
+                        time: '09:00:10',
+                        status: 'complete',
+                        desc: '음향후방산란,해저특성',
+                      },
+                    ].map((row, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <td style={{ padding: '15px', fontSize: '13px' }}>
+                          <div>{row.file}</div>
+                          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{row.desc}</div>
+                        </td>
+                        <td style={{ padding: '15px' }}>
+                          <span
+                            style={{
+                              padding: '4px 10px',
+                              background: row.ship === '아라온호' ? 'rgba(0, 212, 255, 0.2)' : 'rgba(255, 193, 7, 0.2)',
+                              color: row.ship === '아라온호' ? '#00d4ff' : '#ffc107',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                            }}
+                          >
+                            {row.ship}
+                          </span>
+                        </td>
+                        <td style={{ padding: '15px', fontSize: '13px' }}>{row.equipment}</td>
+                        <td style={{ padding: '15px' }}>
+                          <span
+                            style={{
+                              padding: '4px 8px',
+                              background: 'rgba(0, 255, 170, 0.2)',
+                              color: '#00ffaa',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {row.type}
+                          </span>
+                        </td>
+                        <td style={{ padding: '15px', textAlign: 'right', fontSize: '13px' }}>{row.size}</td>
+                        <td style={{ padding: '15px', fontSize: '13px' }}>{row.time}</td>
+                        <td style={{ padding: '15px', textAlign: 'center' }}>
+                          <button
+                            style={{
+                              padding: '6px 12px',
+                              background: 'rgba(0, 212, 255, 0.1)',
+                              border: '1px solid rgba(0, 212, 255, 0.3)',
+                              borderRadius: '6px',
+                              color: '#00d4ff',
+                              cursor: 'pointer',
+                              fontSize: '16px',
+                            }}
+                          >
+                            ⬇️
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                {[1, 2, 3, 4, 5].map((page) => (
+                  <button
+                    key={page}
+                    style={{
+                      padding: '8px 12px',
+                      background: page === 1 ? 'rgba(0, 212, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(0, 212, 255, 0.3)',
+                      borderRadius: '6px',
+                      color: page === 1 ? '#00d4ff' : '#fff',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '20px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>📊</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00d4ff', marginBottom: '5px' }}>3,610</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>총 수신 파일</div>
+                <div style={{ fontSize: '11px', color: 'rgba(0, 212, 255, 0.6)', marginTop: '5px' }}>12개 센서</div>
+              </div>
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>💽</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00d4ff', marginBottom: '5px' }}>59.4 GB</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>총 전송량</div>
+                <div style={{ fontSize: '11px', color: 'rgba(0, 212, 255, 0.6)', marginTop: '5px' }}>이번 항해</div>
+              </div>
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>✅</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ffaa', marginBottom: '5px' }}>99.6%</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>평균 수신 성공률</div>
+                <div style={{ fontSize: '11px', color: 'rgba(0, 255, 170, 0.6)', marginTop: '5px' }}>전체 장비</div>
+              </div>
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>⚡</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00d4ff', marginBottom: '5px' }}>8ms</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>평균 응답시간</div>
+                <div style={{ fontSize: '11px', color: 'rgba(0, 212, 255, 0.6)', marginTop: '5px' }}>UDP/TCP</div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(13, 31, 51, 0.95)',
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: '12px',
+                padding: '25px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <span>📈</span>
+                장비별 데이터 수집 현황
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                {[
+                  { name: 'CTD 센서', files: 342, size: '12.4 GB', success: '99.9%', params: '수온,염분,깊이,전도도' },
+                  { name: '멀티빔 음향측심기', files: 156, size: '18.7 GB', success: '99.7%', params: '수심,해저지형,음향산란' },
+                  { name: '기상 관측 장비', files: 428, size: '3.2 GB', success: '100%', params: '기온,풍속,풍향,기압,습도' },
+                  { name: '해수 샘플러', files: 89, size: '2.1 GB', success: '98.9%', params: 'pH,용존산소,탁도,영양염' },
+                  { name: '수중 카메라', files: 145, size: '8.3 GB', success: '99.3%', params: '4K영상,생물관찰' },
+                  { name: '해저 퇴적물 채취기', files: 87, size: '1.1 GB', success: '99.1%', params: '퇴적물,입도분석' },
+                  { name: '해류계', files: 156, size: '4.2 GB', success: '99.5%', params: '유속,유향,층별데이터' },
+                  { name: '빙두께 측정기', files: 234, size: '1.8 GB', success: '98.7%', params: '빙두께,빙농도,빙질' },
+                  { name: 'GPS/항해장비', files: 876, size: '2.6 GB', success: '100%', params: '위치,속도,방향,고도' },
+                  { name: '선박 센서', files: 654, size: '1.9 GB', success: '99.8%', params: '엔진,연료,유압,발전' },
+                  { name: '파랑계', files: 298, size: '2.3 GB', success: '99.2%', params: '파고,파주기,파향' },
+                  { name: '방사선 측정기', files: 145, size: '0.8 GB', success: '100%', params: '일사량,자외선,복사열' },
+                ].map((eq, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(0, 212, 255, 0.2)',
+                      borderRadius: '8px',
+                      padding: '15px',
+                    }}
+                  >
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#00d4ff' }}>{eq.name}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '10px' }}>{eq.params}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>수신 파일</span>
+                      <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{eq.files}개</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>전송량</span>
+                      <span style={{ color: '#00d4ff', fontWeight: 'bold' }}>{eq.size}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>성공률</span>
+                      <span style={{ color: '#00ffaa', fontWeight: 'bold' }}>{eq.success}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+        const renderReportsView = () => (
+          <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+            <div
+              style={{
+                background: 'rgba(13, 31, 51, 0.95)',
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: '12px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <span>📊</span>
+                보고서 관리
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '20px',
+                  marginBottom: '30px',
+                }}
+              >
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>📋</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>장비 사용 이력</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    장비별 사용 내역 및 실사용자 정보
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    조회 및 다운로드
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>📝</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>점검 일지</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    장비 점검 이력 및 공동활용 정보
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    조회 및 다운로드
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>📄</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>연구장비 운영일지</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    일일 장비 운영 현황 및 활동 내역
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    조회 및 다운로드
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>🧪</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>소모품 사용 목록</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    부속품 및 소모품 사용 현황
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    조회 및 다운로드
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>📈</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>주간 통계 보고서</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    주간 데이터 수집 현황 및 분석
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    보고서 생성
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(0, 212, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.2)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '15px' }}>📋</div>
+                  <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>월간 종합 보고서</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '15px' }}>
+                    월간 연구활동 및 성과 종합
+                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      color: '#0a1929',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    보고서 생성
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '15px',
+                }}
+              >
+                장비 사용 이력 (최근)
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(0, 212, 255, 0.1)' }}>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      번호
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      장비명
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      연구기간
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      사용시간
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      실사용자
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { no: 1, equipment: 'CTD 센서', period: '2025-10-15 ~ 2025-10-20', hours: '45h', user: '김연구' },
+                    { no: 2, equipment: '멀티빔 음향측심기', period: '2025-10-10 ~ 2025-10-18', hours: '78h', user: '이해양' },
+                    { no: 3, equipment: '해수 샘플러', period: '2025-10-12 ~ 2025-10-14', hours: '12h', user: '박바다' },
+                    { no: 4, equipment: '기상 관측 장비', period: '2025-10-08 ~ 2025-10-22', hours: '336h', user: '최기상' },
+                    { no: 5, equipment: '수중 카메라', period: '2025-10-16 ~ 2025-10-19', hours: '28h', user: '정영상' },
+                  ].map((row) => (
+                    <tr key={row.no} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <td style={{ padding: '15px' }}>{row.no}</td>
+                      <td style={{ padding: '15px', fontWeight: 'bold' }}>{row.equipment}</td>
+                      <td style={{ padding: '15px' }}>{row.period}</td>
+                      <td style={{ padding: '15px' }}>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            background: 'rgba(0, 212, 255, 0.2)',
+                            color: '#00d4ff',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {row.hours}
+                        </span>
+                      </td>
+                      <td style={{ padding: '15px' }}>{row.user}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '15px',
+                }}
+              >
+                생성된 보고서 다운로드
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(0, 212, 255, 0.1)' }}>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      보고서명
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      유형
+                    </th>
+                    <th style={{ padding: '15px', textAlign: 'left', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}>
+                      생성일
+                    </th>
+                    <th
+                      style={{ padding: '15px', textAlign: 'center', color: '#00d4ff', borderBottom: '2px solid rgba(0, 212, 255, 0.3)' }}
+                    >
+                      다운로드
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name: '장비 사용 이력_202510', type: '사용 이력', date: '2025-10-21 15:00' },
+                    { name: '점검 일지_202510월3주', type: '점검 일지', date: '2025-10-21 14:30' },
+                    { name: '운영일지_20251021', type: '운영 일지', date: '2025-10-21 09:00' },
+                    { name: '소모품 사용_202510', type: '소모품', date: '2025-10-20 16:00' },
+                    { name: '주간 통계_1021', type: '통계', date: '2025-10-21 09:00' },
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <td style={{ padding: '15px' }}>{row.name}</td>
+                      <td style={{ padding: '15px' }}>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            background: 'rgba(0, 255, 170, 0.2)',
+                            color: '#00ffaa',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                          }}
+                        >
+                          {row.type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '15px' }}>{row.date}</td>
+                      <td style={{ padding: '15px', textAlign: 'center' }}>
+                        <button
+                          style={{
+                            padding: '6px 12px',
+                            background: 'rgba(0, 212, 255, 0.1)',
+                            border: '1px solid rgba(0, 212, 255, 0.3)',
+                            borderRadius: '6px',
+                            color: '#00d4ff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          📥 XLSX
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+
+        const renderSettingsView = () => (
+          <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+            <div
+              style={{
+                background: 'rgba(13, 31, 51, 0.95)',
+                border: '1px solid rgba(0, 212, 255, 0.3)',
+                borderRadius: '12px',
+                padding: '25px',
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#00d4ff',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <span>⚙️</span>
+                시스템 설정
+              </div>
+
+              <div style={{ marginBottom: '30px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#00ffaa' }}>🔔 알림 설정</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[
+                    { label: '장비 이상 알림', checked: true },
+                    { label: '통신 상태 알림', checked: true },
+                    { label: '데이터 수신 알림', checked: false },
+                    { label: '정기 점검 알림', checked: true },
+                  ].map((item, idx) => (
+                    <label
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        defaultChecked={item.checked}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#00d4ff',
+                        }}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '30px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#00ffaa' }}>🔄 데이터 동기화 설정</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>동기화 주기</label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(0, 212, 255, 0.3)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option>실시간 (1초)</option>
+                      <option>5초</option>
+                      <option>10초</option>
+                      <option>30초</option>
+                      <option>1분</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px' }}>자동 백업 주기</label>
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px 15px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(0, 212, 255, 0.3)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option>1시간</option>
+                      <option>6시간</option>
+                      <option>12시간</option>
+                      <option>24시간</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '30px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#00ffaa' }}>🎨 화면 설정</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        accentColor: '#00d4ff',
+                      }}
+                    />
+                    <span>선박 이동 궤적 표시</span>
+                  </label>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '12px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        accentColor: '#00d4ff',
+                      }}
+                    />
+                    <span>지도 그리드 표시</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  style={{
+                    padding: '12px 24px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(0, 212, 255, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  style={{
+                    padding: '12px 24px',
+                    background: 'linear-gradient(135deg, #00d4ff, #00ffaa)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#0a1929',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                >
+                  설정 저장
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '20px',
+              }}
+            >
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>💻</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>시스템 버전</div>
+                <div style={{ fontSize: '18px', color: '#00d4ff', fontWeight: 'bold' }}>v2.1.0</div>
+              </div>
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔒</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>보안 상태</div>
+                <div style={{ fontSize: '18px', color: '#00ffaa', fontWeight: 'bold' }}>안전</div>
+              </div>
+              <div
+                style={{
+                  background: 'rgba(13, 31, 51, 0.95)',
+                  border: '1px solid rgba(0, 212, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>⏱️</div>
+                <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>가동 시간</div>
+                <div style={{ fontSize: '18px', color: '#00d4ff', fontWeight: 'bold' }}>45일 3시간</div>
+              </div>
+            </div>
+          </div>
+        );
+
+        return (
+          <div className="app-container">
+            {/* Top Header */}
+            <div className="top-header">
+              <div className="logo-section">
+                <div className="logo">🧊</div>
+                <div className="logo-text">
+                  <div className="logo-title">육상 통합 관제 시스템</div>
+                  <div className="logo-subtitle">Land-Based Integrated Monitoring System</div>
+                </div>
+              </div>
+
+              <div className="time-display">
+                <div className="time-item">
+                  <div className="time-label">LOCAL</div>
+                  <div className="time-value">{formatTime(currentTime)}</div>
+                </div>
+                <div className="time-item">
+                  <div className="time-label">UTC</div>
+                  <div className="time-value">{formatAntarcticaTime(currentTime)}</div>
+                </div>
+              </div>
+
+              <div className="header-actions">
+                <div className="notification-btn">
+                  🔔
+                  <div className="notification-badge">3</div>
+                </div>
+                <div className="user-profile">
+                  <div className="user-avatar">관</div>
+                  <div className="user-name">관제센터</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Container */}
+            <div className="main-container">
+              {/* Sidebar */}
+              <aside className="sidebar">
+                <button
+                  className={`sidebar-btn ${activeView === 'monitoring' ? 'active' : ''}`}
+                  onClick={() => setActiveView('monitoring')}
+                  title="실시간 모니터링"
+                >
+                  📡
+                  <div className="sidebar-label">모니터링</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeView === 'data' ? 'active' : ''}`}
+                  onClick={() => setActiveView('data')}
+                  title="데이터 관리"
+                >
+                  💾
+                  <div className="sidebar-label">데이터</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeView === 'reports' ? 'active' : ''}`}
+                  onClick={() => setActiveView('reports')}
+                  title="보고서"
+                >
+                  📊
+                  <div className="sidebar-label">보고서</div>
+                </button>
+                <button
+                  className={`sidebar-btn ${activeView === 'settings' ? 'active' : ''}`}
+                  onClick={() => setActiveView('settings')}
+                  title="설정"
+                >
+                  ⚙️
+                  <div className="sidebar-label">설정</div>
+                </button>
+              </aside>
+
+              {/* Content Area */}
+              <div className="content-area">
+                {activeView === 'monitoring' && renderMonitoringView()}
+                {activeView === 'data' && renderDataView()}
+                {activeView === 'reports' && renderReportsView()}
+                {activeView === 'settings' && renderSettingsView()}
+              </div>
+            </div>
+
+            {/* Bottom Status Bar */}
+            <div className="bottom-status-bar">
+              <div style={{ display: 'flex', gap: '30px' }}>
+                <div className="status-item">
+                  <span className="status-icon">⛴️</span>
+                  <span className="status-text">선박:</span>
+                  <span className="status-value">2척 운영 중</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">📡</span>
+                  <span className="status-text">위성 통신:</span>
+                  <span className="status-value">정상</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">💾</span>
+                  <span className="status-text">총 전송량:</span>
+                  <span className="status-value">59.4 GB</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">🔧</span>
+                  <span className="status-text">연구장비:</span>
+                  <span className="status-value">12대 가동 중</span>
+                </div>
+                <div className="status-item">
+                  <span className="status-icon">📊</span>
+                  <span className="status-text">수신 파일:</span>
+                  <span className="status-value">3,610개</span>
+                </div>
+              </div>
+              <div className="connection-indicator">
+                <div className="connection-dot"></div>
+                <div className="connection-text">실시간 연결 (UDP/TCP)</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+    <!-- Leaflet JavaScript -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+  </body>
+</html>

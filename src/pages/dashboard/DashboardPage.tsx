@@ -61,10 +61,11 @@ export default function DashboardPage() {
     const navigate = useNavigate();
 
     const [recentParts, setRecentParts] = useState<Part[]>([]);
+
     useEffect(() => {
         (async () => {
             const res = await listPartsPaged({page: 1, pageSize: 1000, q: '', target: '전체'});
-            setRecentParts(res.items.slice(0, 6));
+            setRecentParts(res.items.slice(0, 5));
         })();
     }, []);
 
@@ -116,9 +117,7 @@ export default function DashboardPage() {
                         전체 보기 →
                     </Button>
                 </Stack>
-
                 <Divider sx={{mt: 2, mb: 3}}/>
-
                 <DataTable<Part>
                     columns={[
                         {id: 'id', header: '번호', width: 60},

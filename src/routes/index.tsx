@@ -26,11 +26,11 @@ export const router = createBrowserRouter([
     // 보호 영역
     {
         path: '/',
-        element: <RequireAuth/>, // 가드로 먼저 감싸기
+        element: <RequireAuth/>, // 인증 가드로 먼저 감싸기
         children: [
             {
                 path: '',
-                element: <AppLayout/>, // ← 레이아웃/테마
+                element: <AppLayout/>, // ← 레이아웃 공통
                 children: [
                     {index: true, element: <Navigate to="/dashboard"/>},
                     {path: 'dashboard', element: <DashboardPage/>},

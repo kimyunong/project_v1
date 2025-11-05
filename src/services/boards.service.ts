@@ -10,7 +10,7 @@ export type Notice = {
     category: '공지' | '자료' | '보고서';
     content?: string;
 };
-
+// 입력 타입
 export type ListNoticesInput = {
     page?: number;
     pageSize?: number;
@@ -18,6 +18,7 @@ export type ListNoticesInput = {
     target?: '전체' | '제목' | '내용' | '작성자';
 };
 
+// 로딩 스피너 (비동기)
 function sleep(ms = 160) {
     return new Promise(r => setTimeout(r, ms));
 }
@@ -25,6 +26,7 @@ function sleep(ms = 160) {
 // 내부 상태: seed를 메모리 상에서 조작
 let store: Notice[] = (seed as Notice[]).map(n => ({content: '', ...n}));
 
+// 목록 조회 : 필터+정렬+페이징
 export async function listNotices({
                                       page = 1, pageSize = 10, q = '', target = '전체'
                                   }: ListNoticesInput = {}): Promise<Page<Notice>> {
@@ -34,6 +36,7 @@ export async function listNotices({
     const keyword = q.trim();
     let filtered = store;
 
+    // 키워드 필터
     if (keyword) {
         const hit = (n: Notice) => {
             const t = (s?: string) => (s ?? '').toLowerCase();
@@ -58,7 +61,6 @@ export async function listNotices({
 
     return {items, page, pageSize, total};
 }
-
 
 export async function getNotice(id: number): Promise<Notice | undefined> {
     await sleep();

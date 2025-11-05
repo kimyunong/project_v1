@@ -40,9 +40,9 @@ function RawDataTable<T>({
                              getRowKey,
                          }: Props<T>) {
     const rows = data ?? [];
+    console.log("test",columns);
 
     return (
-
         <Table aria-label="data table">
             <TableHead>
                 <TableRow>
@@ -106,5 +106,5 @@ function RawDataTable<T>({
     );
 }
 
-const DataTable = memo(RawDataTable) as typeof RawDataTable;
+const DataTable = memo(RawDataTable) as typeof RawDataTable; // memo로 불필요한 리렌더 방지
 export default DataTable;
