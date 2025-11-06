@@ -152,7 +152,7 @@ export default function EquipmentPage() {
                 <Typography variant="h6" sx={{flexGrow: 1, color: '#00d4ff'}}>장비 관리</Typography>
                 <Stack direction="row" spacing={1}>
                     <Button variant="outlined" disabled>엑셀 다운로드</Button>
-                    <Button variant="contained" onClick={() => setOpen(true)}>+ 장비 등록</Button>
+                    <Button variant="contained" onClick={() => setOpen(true)}>장비 등록</Button>
                 </Stack>
             </Stack>
 

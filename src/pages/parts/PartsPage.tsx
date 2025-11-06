@@ -123,10 +123,10 @@ export default function PartsPage() {
         <Stack spacing={2}>
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6" sx={{color: '#00d4ff'}}>부속품 관리</Typography>
+                <Typography variant="h6" sx={{color: '#00d4ff'}}>부속 관리</Typography>
                 <Stack direction="row" spacing={1}>
                     <Button variant="outlined" disabled>엑셀 다운로드</Button>
-                    <Button variant="contained" onClick={() => setOpen(true)}>+ 부속품 등록</Button>
+                    <Button variant="contained" onClick={() => setOpen(true)}>부속 등록</Button>
                 </Stack>
             </Stack>
 

@@ -1,22 +1,23 @@
 import {
-    Table, TableBody, TableCell, TableHead, TableRow, Skeleton
+    Table, TableBody, TableCell, TableHead, TableRow,
+    Skeleton, TableContainer, Typography, useMediaQuery,
+    Theme
 } from '@mui/material';
-import {ReactNode, memo} from 'react';
+import {ReactNode, memo, useMemo} from 'react';
 
 export type Accessor<T> = (row: T, rowIndex: number) => ReactNode;
 
 export type Column<T> = {
-    /* 고유 id (정렬/엑셀/테스트 식별에 사용) */
     id: string;
-    /* 헤더 라벨 */
     header: string;
-    /* 레이아웃 */
     width?: number | string;
     align?: 'left' | 'center' | 'right';
-    /* 기본 값 추출기 (없으면 row[id] 사용) */
     getValue?: Accessor<T>;
-    /* 고급 렌더링 (Chip, 링크 등) */
     renderCell?: Accessor<T>;
+    hideBelow?: 'sm' | 'md' | 'lg' | 'xl';
+    alwaysShow?: boolean;
+    ellipsis?: boolean;
+    maxWidth?: number | string;
 };
 
 type Props<T> = {
@@ -24,13 +25,12 @@ type Props<T> = {
     data?: T[];
     loading?: boolean;
     emptyText?: string;
-    /* 고유 row key (id가 없으면 index 사용) */
     getRowKey?: (row: T, index: number) => string | number;
-    /* Paper variant 지정 (outlined가 테이블에 잘 어울림) */
     variant?: 'elevation' | 'outlined';
-    /* Table size */
     size?: 'small' | 'medium';
 };
+
+const breakpointOrder: Record<NonNullable<Column<any>['hideBelow']>, number> = {sm: 0, md: 1, lg: 2, xl: 3};
 
 function RawDataTable<T>({
                              columns,
@@ -40,71 +40,134 @@ function RawDataTable<T>({
                              getRowKey,
                          }: Props<T>) {
     const rows = data ?? [];
-    console.log("test",columns);
+
+    // 브레이크포인트 상태(정자 사용)
+    const isUpSm = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm')); // >=600
+    const isUpMd = useMediaQuery((theme: Theme) => theme.breakpoints.up('md')); // >=900
+    const isUpLg = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg')); // >=1200
+    const isUpXl = useMediaQuery((theme: Theme) => theme.breakpoints.up('xl')); // >=1536
+
+    const visibleColumns = useMemo(() => {
+        // 1) hideBelow 규칙 적용
+        const filteredByRule = columns.filter((column) => {
+            if (!column.hideBelow) return true;
+            const minLevel = breakpointOrder[column.hideBelow];
+            const isVisible =
+                (minLevel <= 0 && isUpSm) ||
+                (minLevel <= 1 && isUpMd) ||
+                (minLevel <= 2 && isUpLg) ||
+                (minLevel <= 3 && isUpXl);
+            return isVisible;
+        });
+
+        // 2) xs 기본 규칙: "앞의 2개" + "alwaysShow=true"
+        const isXs = !isUpSm;
+        if (isXs) {
+            const headTwo = filteredByRule.slice(0, 2);
+            const pinned = filteredByRule.filter((column) => column.alwaysShow && !headTwo.includes(column));
+            const selected = new Set([...headTwo, ...pinned]);
+            return filteredByRule.filter((column) => selected.has(column));
+        }
+        return filteredByRule;
+    }, [columns, isUpSm, isUpMd, isUpLg, isUpXl]);
 
     return (
-        <Table aria-label="data table">
-            <TableHead>
-                <TableRow>
-                    {columns.map((c) => (
-                        <TableCell
-                            key={c.id}
-                            align={c.align ?? 'center'}
-                            sx={{width: c.width, p: 2,}}
-                        >
-                            {c.header}
-                        </TableCell>
-                    ))}
-                </TableRow>
-            </TableHead>
-
-            <TableBody>
-                {/* 로딩 스켈레톤 */}
-                {loading && Array.from({length: 5}).map((_, i) => (
-                    <TableRow key={`sk-${i}`}>
-                        {columns.map((c) => (
-                            <TableCell key={`skc-${c.id}`}>
-                                <Skeleton height={20}/>
+        <TableContainer sx={{width: 1, overflowX: 'auto'}}>
+            <Table aria-label="data table" size="small">
+                <TableHead>
+                    <TableRow>
+                        {visibleColumns.map((column) => (
+                            <TableCell
+                                key={column.id}
+                                align={column.align ?? 'center'}
+                                sx={{width: column.width, p: {xs: 1, sm: 1.25, md: 1.5, lg: 2}}}
+                            >
+                                {column.header}
                             </TableCell>
                         ))}
                     </TableRow>
-                ))}
+                </TableHead>
 
-                {/* 데이터 */}
-                {!loading && rows.length > 0 && rows.map((row, i) => {
-                    const rowKey = getRowKey?.(row, i) ?? i;
-                    return (
-                        <TableRow key={rowKey} hover tabIndex={0}>
-                            {columns.map((c) => {
-                                const base = (row as unknown as Record<string, unknown>)[c.id];
-                                const content = c.renderCell
-                                    ? c.renderCell(row, i)
-                                    : c.getValue
-                                        ? c.getValue(row, i)
-                                        : String(base ?? '');
-                                return (
-                                    <TableCell key={c.id} align={c.align ?? 'center'}>
-                                        {content}
+                <TableBody>
+                    {/* 로딩 스켈레톤 */}
+                    {loading &&
+                        Array.from({length: 5}).map((_, index) => (
+                            <TableRow key={`skeleton-row-${index}`}>
+                                {visibleColumns.map((column) => (
+                                    <TableCell key={`skeleton-cell-${column.id}`}>
+                                        <Skeleton height={18}/>
                                     </TableCell>
-                                );
-                            })}
+                                ))}
+                            </TableRow>
+                        ))}
+
+                    {/* 데이터 렌더 */}
+                    {!loading &&
+                        rows.length > 0 &&
+                        rows.map((row, index) => {
+                            const rowKey = getRowKey?.(row, index) ?? index;
+                            return (
+                                <TableRow key={rowKey} hover tabIndex={0}>
+                                    {visibleColumns.map((column) => {
+                                        const base = (row as unknown as Record<string, unknown>)[column.id];
+                                        const content = column.renderCell
+                                            ? column.renderCell(row, index)
+                                            : column.getValue
+                                                ? column.getValue(row, index)
+                                                : String(base ?? '');
+
+                                        // 말줄임/최대폭 처리
+                                        if (column.ellipsis || column.maxWidth) {
+                                            return (
+                                                <TableCell
+                                                    key={column.id}
+                                                    align={column.align ?? 'center'}
+                                                    sx={{p: {xs: 1, sm: 1.25, md: 1.5}}}
+                                                >
+                                                    <Typography
+                                                        noWrap
+                                                        sx={{
+                                                            maxWidth: column.maxWidth ?? 160,
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap',
+                                                            mx: 'auto',
+                                                        }}
+                                                    >
+                                                        {content}
+                                                    </Typography>
+                                                </TableCell>
+                                            );
+                                        }
+
+                                        return (
+                                            <TableCell
+                                                key={column.id}
+                                                align={column.align ?? 'center'}
+                                                sx={{p: {xs: 1, sm: 1.25, md: 1.5}}}
+                                            >
+                                                {content}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            );
+                        })}
+
+                    {/* 빈 상태 */}
+                    {!loading && rows.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={visibleColumns.length} align="center"
+                                       sx={{py: 6, color: 'text.secondary'}}>
+                                {emptyText}
+                            </TableCell>
                         </TableRow>
-                    );
-                })}
-
-                {/* 빈 상태 */}
-                {!loading && rows.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={columns.length} align="center" sx={{py: 6, color: 'text.secondary'}}>
-                            {emptyText}
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
-
+                    )}
+                </TableBody>
+            </Table>
+        </TableContainer>
     );
 }
 
-const DataTable = memo(RawDataTable) as typeof RawDataTable; // memo로 불필요한 리렌더 방지
+const DataTable = memo(RawDataTable) as typeof RawDataTable;
 export default DataTable;

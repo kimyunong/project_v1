@@ -86,7 +86,7 @@ export default function BoardsPage() {
         <Paper sx={{p: 2}}>
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 2, p: 1}}>
                 <Typography variant="h6" sx={{flexGrow: 1, color: '#00d4ff'}}>공지사항</Typography>
-                <Button variant="contained" onClick={() => setOpen(true)}>+ 새 공지사항</Button>
+                <Button variant="contained" onClick={() => setOpen(true)}>새 공지사항</Button>
             </Stack>
 
             <Box sx={{pb: 2}}>

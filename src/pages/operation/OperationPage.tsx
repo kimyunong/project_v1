@@ -98,7 +98,7 @@ export default function OperationPage() {
             {/* 헤더 */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <Typography variant="h6" sx={{color: '#00d4ff'}}>연구장비 운영 일지</Typography>
-                <Button variant="contained" onClick={() => setOpen(true)}>+ 운영일지 작성</Button>
+                <Button variant="contained" onClick={() => setOpen(true)}>운영일지 작성</Button>
             </Stack>
 
             {/* 검색바 */}
